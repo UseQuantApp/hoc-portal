@@ -1,0 +1,17 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Frame 2147227849">
+<circle id="Ellipse 34" cx="32" cy="32" r="32" fill="#F7F7F7"/>
+<g id="logos:google-gmail" clip-path="url(#clip0_0_117)">
+<path id="Vector" d="M25.6818 41.9065V32.1692L22.6862 29.4065L20 27.8735V40.1881C20 41.1389 20.7642 41.9065 21.7046 41.9065H25.6818Z" fill="#4285F4"/>
+<path id="Vector_2" d="M39.3182 41.9065H43.2954C44.2387 41.9065 45 41.136 45 40.1881V27.8735L41.9574 29.6295L39.3182 32.1692V41.9065Z" fill="#34A853"/>
+<path id="Vector_3" d="M25.6818 32.1692L25.2742 28.3646L25.6818 24.7232L32.5 29.8782L39.3182 24.7232L39.7741 28.168L39.3182 32.1692L32.5 37.3242L25.6818 32.1692Z" fill="#EA4335"/>
+<path id="Vector_4" d="M39.3182 24.7232V32.1692L45 27.8735V25.5823C45 23.4574 42.5937 22.246 40.9092 23.5204L39.3182 24.7232Z" fill="#FBBC04"/>
+<path id="Vector_5" d="M20 27.8735L22.6132 29.8493L25.6818 32.1692V24.7232L24.0908 23.5204C22.4033 22.2459 20 23.4574 20 25.5822V27.8735Z" fill="#C5221F"/>
+</g>
+</g>
+<defs>
+<clipPath id="clip0_0_117">
+<rect width="25" height="19" fill="white" transform="translate(20 23)"/>
+</clipPath>
+</defs>
+</svg>
