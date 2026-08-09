@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Header from "@/components/Header";
+import Link from "next/link";
 
 const RESEND_COOLDOWN = 54;
 
@@ -58,9 +59,12 @@ export default function VerifyRecoveryEmailPage() {
         </div>
 
         <div className="flex flex-col items-center gap-3 w-full">
-          <button className="w-full bg-[#006dff] text-white text-base py-3 rounded-xl hover:bg-[#005ce0] transition-colors">
-            Verify &amp; Continue
-          </button>
+          <Link
+         href="/account/recovery-email-verified"
+         className="w-full bg-[#006dff] text-white text-base py-3 rounded-xl hover:bg-[#005ce0] transition-colors text-center block"
+            > 
+        Verify &amp; Continue
+           </Link>
 
           <p className="text-sm">
             <span className="text-black/50">Didn&apos;t receive it? </span>

@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { Plus, ArrowRight, Calendar, Clock, CheckCircle2, XCircle } from "lucide-react";
-
+import Link from "next/link";
 const columns = ["Document Title", "Courses", "Date", "Status", "Points"];
 
 type Upload = {
@@ -60,9 +60,9 @@ export default function RecentUploadsCard({ uploads = [] }: { uploads?: Upload[]
                 Share your first lecture material and start earning Quant Points. Every upload helps your classmates and rewards you.
               </p>
             </div>
-            <button className="bg-[#121720] text-white text-sm lg:text-base flex items-center gap-2 px-3.5 py-3 lg:py-4 rounded-lg w-full max-w-[304px] justify-center">
+            <Link href="/upload" className="bg-[#121720] text-white text-sm lg:text-base flex items-center gap-2 px-3.5 py-3 lg:py-4 rounded-lg w-full max-w-[304px] justify-center">
               <Plus size={16} /> Upload New Document
-            </button>
+            </Link>
           </div>
         ) : (
           <div className="min-w-[700px] lg:min-w-0">

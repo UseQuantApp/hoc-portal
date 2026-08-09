@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
+import { ThemeProvider } from "@/lib/theme-context";
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -20,9 +21,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${jakarta.variable} font-sans antialiased bg-[#fbfbfb]`}>
-        {children}
-      </body>
+      <body className={`${jakarta.variable} font-sans antialiased bg-[#fbfbfb] dark:bg-[#0f1115] transition-colors`}>
+     <ThemeProvider>{children}</ThemeProvider>
+     </body>
     </html>
   );
 }
