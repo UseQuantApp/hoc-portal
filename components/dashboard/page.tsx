@@ -13,20 +13,20 @@ import {
 
 export default function DashboardPage() {
   return (
-    <main className="min-h-screen bg-[#fbfbfb] flex flex-col items-center gap-8 px-4 md:px-16 py-8">
+    <main className="min-h-screen bg-[#fbfbfb] dark:bg-[#0f1115] flex flex-col items-center gap-8 px-4 md:px-16 py-8">
       <div className="w-full max-w-[1312px]">
         <Navbar />
       </div>
 
       <div className="w-full max-w-[1312px] flex items-center gap-4">
-        <div className="bg-white flex-1 rounded-xl p-3 lg:p-4 flex items-center gap-2.5">
-          <input
-            placeholder="Search materials, courses..."
-            className="w-full text-sm lg:text-lg text-[#212121] placeholder:text-[#21212180] outline-none bg-transparent"
-          />
-        </div>
-        <button className="hidden lg:block bg-white rounded-xl px-5 py-4 text-[#212121] text-xl shrink-0">All levels</button>
-        <button className="hidden lg:block bg-white rounded-xl px-5 py-4 text-[#212121] text-xl shrink-0">All Semester</button>
+        <div className="bg-white dark:bg-[#1a1d24] flex-1 rounded-xl p-3 lg:p-4 flex items-center gap-2.5">
+  <input
+    placeholder="Search materials, courses..."
+    className="w-full text-sm lg:text-lg text-[#212121] dark:text-white placeholder:text-[#21212180] dark:placeholder:text-[#ffffff60] outline-none bg-transparent"
+  />
+</div>
+<button className="hidden lg:block bg-white dark:bg-[#1a1d24] dark:text-white rounded-xl px-5 py-4 text-[#212121] text-xl shrink-0">All levels</button>
+<button className="hidden lg:block bg-white dark:bg-[#1a1d24] dark:text-white rounded-xl px-5 py-4 text-[#212121] text-xl shrink-0">All Semester</button>
       </div>
 
       <div className="w-full max-w-[1312px]">

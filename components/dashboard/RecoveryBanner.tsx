@@ -20,12 +20,12 @@ export default function RecoveryBanner({ status = "no-email" }: RecoveryBannerPr
   const buttonLabel = status === "no-email" ? "Add email" : "Verify Email";
 
   return (
-    <div className="relative bg-white flex items-center gap-4 p-4 pl-6 rounded-lg overflow-hidden w-full">
+    <div className="relative bg-white dark:bg-[#1a1d24] flex items-center gap-4 p-4 pl-6 rounded-lg overflow-hidden w-full">
       <div className="absolute left-0 top-0 h-full w-1.5 bg-[#f60]" />
       <div className="bg-[#ffebeb] rounded-full size-9 flex items-center justify-center shrink-0">
         <AlertCircle className="text-[#ff4343]" size={20} />
       </div>
-      <p className="text-lg text-[#212121] flex-1">{message}</p>
+      <p className="text-lg text-[#212121] dark:text-white flex-1">{message}</p>
       <Link
         href="/account/add-recovery-email"
        className="bg-[#006dff] text-white text-sm px-4 py-2.5 rounded-md whitespace-nowrap"

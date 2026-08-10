@@ -48,3 +48,16 @@ export const placeholderLeaderboard = [
   { name: "Akorede Habeebullah (you)", tier: "T 32", materials: 200, points: "12,000", medal: "/images/medal-bronze.svg", avatar: "/images/leaderboard-avatar-3.png", isYou: true },
   { name: "Priya Patel", tier: "T 32", materials: 200, points: "11,000", medal: null, rank: 4, avatar: "/images/leaderboard-avatar-4.png", isYou: false },
 ];
+
+export const fullUploadsData = [
+  { id: 1, title: "Thermodynamics 1 .doc", size: "120 Mb", type: "doc", course: "ECE 301", date: "2024-12-01", status: "In Review", points: "0 pts (In review)" },
+  { id: 2, title: "Thermodynamics 1 .pdf", size: "150 Mb", type: "pdf", course: "MEE 305", date: "2024-11-28", status: "Approved", points: "300 pts" },
+  { id: 3, title: "Thermodynamics 1 .pdf", size: "150 Mb", type: "pdf", course: "MEE 305", date: "2024-11-28", status: "Rejected", points: "0 pts" },
+  { id: 4, title: "Thermodynamics 1 .pdf", size: "150 Mb", type: "pdf", course: "MEE 305", date: "2024-11-28", status: "Approved", points: "300 pts" },
+  { id: 5, title: "Thermodynamics 1 .pdf", size: "150 Mb", type: "pdf", course: "MEE 305", date: "2024-11-28", status: "Approved", points: "300 pts" },
+  { id: 6, title: "Thermodynamics 1 .doc", size: "120 Mb", type: "doc", course: "MEE 305", date: "2024-12-02", status: "Approved", points: "0 pts" },
+  { id: 7, title: "Thermodynamics 1", size: "50 Mb", type: "pptx", course: "MEE 305", date: "2024-11-25", status: "Approved", points: "300 pts" },
+  { id: 8, title: "Thermodynamics 1 .pdf", size: "150 Mb", type: "pdf", course: "MEE 305", date: "2024-12-02", status: "In Review", points: "0 pts (In review)" },
+  { id: 9, title: "Thermodynamics 1 .pdf", size: "150 Mb", type: "pdf", course: "MEE 305", date: "2024-12-02", status: "In Review", points: "0 pts (In review)" },
+  { id: 10, title: "Thermodynamics 1 .pdf", size: "150 Mb", type: "pdf", course: "MEE 305", date: "2024-12-02", status: "In Review", points: "0 pts (In review)" },
+];

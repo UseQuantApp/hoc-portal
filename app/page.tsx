@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Header from "@/components/Header";
 import StepIndicator from "@/components/StepIndicator";
+import Link from "next/link";
 
 export default function LoginPage() {
   return (
@@ -9,7 +10,7 @@ export default function LoginPage() {
         <Header />
       </div>
 
-      <div className="w-full max-w-[1100px] flex flex-col lg:flex-row gap-10 lg:gap-16 items-center lg:items-start px-6 py-8 lg:p-8">
+      <div className="w-full max-w-[1100px] flex flex-col lg:flex-row gap-10 lg:gap-16 items-center lg:items-center px-6 py-8 lg:p-8">
         {/* Left: Login form */}
         <div className="w-full lg:w-1/2 flex flex-col gap-8 lg:gap-10">
           <StepIndicator step={1} className="hidden lg:flex" />
@@ -57,12 +58,12 @@ export default function LoginPage() {
                 </label>
               </div>
 
-              <button
-                type="submit"
-                className="w-full bg-[#006dff] text-white text-base lg:text-lg lowercase py-3 rounded-xl hover:bg-[#005ce0] transition-colors"
-              >
-                send verification code (otp)
-              </button>
+             <Link
+            href="/verify-otp"
+           className="w-full bg-[#006dff] text-white text-base lg:text-lg lowercase py-3 rounded-xl hover:bg-[#005ce0] transition-colors text-center block"
+               >
+            send verification code (otp)
+          </Link>
             </form>
           </div>
         </div>
