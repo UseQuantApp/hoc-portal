@@ -9,6 +9,9 @@ type PointsProgressCardProps = {
   pointsAway?: number;
   ringValue?: string;
   weeks?: Week[];
+  fullName?: string;
+  tokens?: number;
+  uploadStreakDays?: number;
 };
 
 const defaultWeeks: Week[] = [
@@ -27,34 +30,38 @@ export default function PointsProgressCard({
   pointsAway = 2500,
   ringValue = "0",
   weeks = defaultWeeks,
+  fullName = "",
+  tokens = 0,
+  uploadStreakDays = 0,
 }: PointsProgressCardProps) {
   const isEmpty = pointsEarned === 0;
+  const firstName = fullName ? fullName.split(" ")[0] : "";
 
   return (
     <div className="w-full">
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 lg:gap-0 mb-6 lg:mb-8">
         <div className="flex flex-col gap-1.5 lg:gap-3">
-    <p className="text-base lg:text-[28px] text-[#212121] dark:text-white">
-       Welcome <span className="font-bold">Akorede!</span> 👋
-     </p>
-    <p className="text-sm lg:text-lg text-black dark:text-[#c5c8cf]">
+          <p className="text-base lg:text-[28px] text-[#212121]">
+            Welcome <span className="font-bold">{firstName ? `${firstName}!` : "..."}</span> 👋
+          </p>
+          <p className="text-sm lg:text-lg text-black">
             {isEmpty
               ? "You haven't uploaded anything yet — start sharing and earning today."
               : "Here's what moved while you were away."}
           </p>
         </div>
         <div className="flex flex-row lg:flex-col items-center lg:items-end justify-between lg:justify-start gap-2 lg:gap-2.5">
-          <p className="text-sm lg:text-lg text-black dark:text-[#c5c8cf]">Total Uploaded Materials</p>
+          <p className="text-sm lg:text-lg text-black">Total Uploaded Materials</p>
           <div className="flex items-center gap-1.5 lg:gap-2.5">
-         <Image src="/images/points-icon.png" alt="" width={16} height={16} className="lg:w-[23px] lg:h-[23px]" />
-      <p className="text-lg lg:text-[28px] font-bold text-[#212121] dark:text-white">{totalUploaded}</p>
-         </div>
+            <Image src="/images/points-icon.png" alt="" width={16} height={16} className="lg:w-[23px] lg:h-[23px]" />
+            <p className="text-lg lg:text-[28px] font-bold text-[#212121]">{totalUploaded}</p>
+          </div>
         </div>
       </div>
 
-<div className="bg-white dark:bg-[#1a1d24] border border-[#f6f6f6] dark:border-[#2a2e37] rounded-xl flex items-center gap-4 lg:gap-8 p-3 lg:p-4 h-auto lg:h-[180px] overflow-x-auto">
-  <div className="bg-[#eff7ff] dark:bg-[#152238] border-2 border-[#e6f1ff] dark:border-[#1e3050] rounded-xl flex flex-col gap-2 lg:gap-3 items-center justify-center px-4 lg:px-6 py-2 lg:py-3 h-[110px] lg:h-[153px] w-[150px] lg:w-[220px] shrink-0">
-    <p className="text-xs lg:text-base text-black dark:text-[#c5c8cf]">Points earned</p>
+      <div className="bg-white border border-[#f6f6f6] rounded-xl flex items-center gap-4 lg:gap-8 p-3 lg:p-4 h-auto lg:h-[180px] overflow-x-auto">
+        <div className="bg-[#eff7ff] border-2 border-[#e6f1ff] rounded-xl flex flex-col gap-2 lg:gap-3 items-center justify-center px-4 lg:px-6 py-2 lg:py-3 h-[110px] lg:h-[153px] w-[150px] lg:w-[220px] shrink-0">
+          <p className="text-xs lg:text-base text-black">Points earned</p>
           <div className="flex items-center gap-1">
             <Image src="/images/points-icon-large.png" alt="" width={13} height={13} className="lg:w-[19px] lg:h-[19px]" />
             <p className="text-base lg:text-2xl font-bold text-[#0225b6]">{pointsEarned.toLocaleString()} Points</p>
@@ -73,8 +80,8 @@ export default function PointsProgressCard({
         <div className="relative shrink-0 size-[110px] lg:size-[170px]">
           <Image src="/images/progress-ring.svg" alt="" fill className="object-contain" />
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-1">
-<p className="text-xs lg:text-[16px] font-bold text-[#212121] dark:text-white">{ringValue}</p>
-<p className="text-[8px] lg:text-[10px] text-black dark:text-[#c5c8cf]">Points</p>
+            <p className="text-xs lg:text-[16px] font-bold text-[#212121]">{ringValue}</p>
+            <p className="text-[8px] lg:text-[10px] text-black">Points</p>
             <div className="flex items-center gap-1">
               <AlertTriangle size={9} className="text-[#ffcc14] lg:hidden" />
               <AlertTriangle size={11} className="text-[#ffcc14] hidden lg:block" />
@@ -83,8 +90,10 @@ export default function PointsProgressCard({
           </div>
         </div>
 
-        <div className="flex items-center justify-between border-l border-[#e5e5e5] dark:border-[#2a2e37] pl-4 lg:pl-8 gap-3 lg:gap-0 lg:flex-1">
-          {weeks.map((week, i) => (
+        <div className="flex items-center justify-between border-l border-[#e5e5e5] pl-4 lg:pl-8 gap-3 lg:gap-0 lg:flex-1">
+          <Stat label="Tokens" value={tokens.toLocaleString()} />
+          <Stat label="Upload streak" value={`${uploadStreakDays} days`} />
+          {weeks.slice(0, 3).map((week, i) => (
             <div key={i} className="flex flex-col items-center gap-1.5 lg:gap-2 shrink-0 px-1 lg:px-2">
               <div
                 className={`relative size-[26px] lg:size-[34px] rounded-md flex flex-col items-center justify-center border-2 border-white ${
@@ -96,7 +105,7 @@ export default function PointsProgressCard({
                 </svg>
                 <span className="absolute bottom-1 lg:bottom-1.5 text-white text-[5px] lg:text-[6px] font-bold">{week.label}</span>
               </div>
-              <p className={`text-xs lg:text-base font-bold ${week.active ? "text-[#212121] dark:text-white" : "text-[#9f9f9f]"}`}>
+              <p className={`text-xs lg:text-base font-bold ${week.active ? "text-[#212121]" : "text-[#9f9f9f]"}`}>
                 {week.points.toLocaleString()}
               </p>
               <div className="flex items-center gap-0.5">
@@ -107,6 +116,15 @@ export default function PointsProgressCard({
           ))}
         </div>
       </div>
+    </div>
+  );
+}
+
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex flex-col items-center gap-1.5 lg:gap-2 shrink-0 px-1 lg:px-2">
+      <p className="text-xs lg:text-base font-bold text-[#212121]">{value}</p>
+      <p className="text-[8px] lg:text-[10px] text-[#9f9f9f]">{label}</p>
     </div>
   );
 }

@@ -5,7 +5,7 @@ import Image from "next/image";
 import { ArrowRight, X } from "lucide-react";
 import FullLeaderboard from "@/components/dashboard/FullLeaderboard";
 
-type Leader = {
+export type Leader = {
   name: string;
   tier: string;
   materials: number;
@@ -16,14 +16,17 @@ type Leader = {
   isYou: boolean;
 };
 
-export default function LeaderboardCard({ leaders = [] }: { leaders?: Leader[] }) {
+export default function LeaderboardCard({ leaders = [], me }: { leaders?: Leader[]; me?: { rank: number; points: number } | null }) {
   const [showModal, setShowModal] = useState(false);
   const hasYouRanked = leaders.some((l) => l.isYou);
+  const displayLeaders = me && !hasYouRanked
+    ? [...leaders, { name: "You", tier: `#${me.rank}`, materials: 0, points: me.points.toLocaleString(), medal: null, rank: me.rank, avatar: "/images/avatar-user.png", isYou: true }]
+    : leaders;
 
   return (
     <div className="flex flex-col gap-4 lg:gap-8 flex-1">
       <div className="flex items-center justify-between">
-       <p className="text-lg lg:text-[28px] font-bold text-[#212121] dark:text-white">Top Contributors Leaderboard</p>
+        <p className="text-lg lg:text-[28px] font-bold text-[#212121]">Top Contributors Leaderboard</p>
         <button
           onClick={() => setShowModal(true)}
           className="bg-[#fcfdfd] border border-[#e5e5e5] text-[#212121] text-xs lg:text-base flex items-center gap-1.5 lg:gap-2 px-3 lg:px-4 py-2 lg:py-3.5 rounded-lg shrink-0"
@@ -32,13 +35,13 @@ export default function LeaderboardCard({ leaders = [] }: { leaders?: Leader[] }
         </button>
       </div>
 
-     <div className="border border-[#ececec] dark:border-[#2a2e37] bg-[#fbfbfb] dark:bg-[#15171d] rounded-2xl flex flex-col gap-2 lg:gap-4 p-2 lg:p-4">
-        {leaders.map((leader) => (
+      <div className="border border-[#ececec] bg-[#fbfbfb] rounded-2xl flex flex-col gap-2 lg:gap-4 p-2 lg:p-4">
+        {displayLeaders.map((leader) => (
           <div
             key={leader.name}
             className={`rounded-3xl flex items-center justify-between px-3 lg:px-4 py-2 lg:py-2.5 gap-2 ${
-             leader.isYou ? "bg-[#edf5ff] dark:bg-[#152238] border border-[#b2d3ff] dark:border-[#2a4a80]" : "bg-white dark:bg-[#1a1d24]"
-           }`} 
+              leader.isYou ? "bg-[#edf5ff] border border-[#b2d3ff]" : "bg-white"
+            }`}
           >
 <div className="flex items-center gap-2 lg:gap-6 min-w-0">
   {/* rank/medal — desktop only, sits on the left */}
@@ -56,7 +59,7 @@ export default function LeaderboardCard({ leaders = [] }: { leaders?: Leader[] }
     <div className="flex flex-col gap-1 lg:gap-2 min-w-0">
       <p
        className={`font-bold text-sm lg:text-xl tracking-tight truncate ${
-     leader.isYou ? "text-[#006dff] dark:text-[#4d94ff]" : "text-[#212121] dark:text-white"
+     leader.isYou ? "text-[#006dff]" : "text-[#212121]"
       }`}
       >
         {leader.name}
@@ -85,7 +88,7 @@ export default function LeaderboardCard({ leaders = [] }: { leaders?: Leader[] }
   ) : null}
   <p
    className={`font-bold text-sm lg:text-xl tracking-tight truncate ${
-  leader.isYou ? "text-[#006dff] dark:text-[#4d94ff]" : "text-[#212121] dark:text-white"
+  leader.isYou ? "text-[#006dff]" : "text-[#212121]"
     }`}
   >
     {leader.points} pts
@@ -108,7 +111,7 @@ export default function LeaderboardCard({ leaders = [] }: { leaders?: Leader[] }
 
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50" onClick={() => setShowModal(false)}>
-          <div className="bg-white dark:bg-[#1a1d24] rounded-2xl w-full max-w-[700px] max-h-[85vh] overflow-y-auto p-4 lg:p-6"
+          <div className="bg-white rounded-2xl w-full max-w-[700px] max-h-[85vh] overflow-y-auto p-4 lg:p-6"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-4 lg:mb-6">
@@ -117,7 +120,7 @@ export default function LeaderboardCard({ leaders = [] }: { leaders?: Leader[] }
                 <X size={24} />
               </button>
             </div>
-            <FullLeaderboard />
+            <FullLeaderboard leaders={displayLeaders} />
           </div>
         </div>
       )}

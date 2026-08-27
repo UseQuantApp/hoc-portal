@@ -10,30 +10,31 @@ const fileIcons: Record<string, string> = {
 };
 
 const statusStyles: Record<string, { bg: string; text: string; icon: React.ReactNode }> = {
-  "In Review": { bg: "bg-[#fef9c2] dark:bg-[#3a3410]", text: "text-[#894b00] dark:text-[#f5c518]", icon: <Clock size={12} /> },
-  Approved: { bg: "bg-[#dcfce7] dark:bg-[#0f3320]", text: "text-[#016630] dark:text-[#4ade80]", icon: <CheckCircle2 size={12} /> },
-  Rejected: { bg: "bg-[#ffe2e2] dark:bg-[#3a1414]", text: "text-[#9f0712] dark:text-[#f87171]", icon: <XCircle size={12} /> },
+  "In Review": { bg: "bg-[#fef9c2]", text: "text-[#894b00]", icon: <Clock size={12} /> },
+  Approved: { bg: "bg-[#dcfce7]", text: "text-[#016630]", icon: <CheckCircle2 size={12} /> },
+  Rejected: { bg: "bg-[#ffe2e2]", text: "text-[#9f0712]", icon: <XCircle size={12} /> },
+  "—": { bg: "bg-[#f3f4f6]", text: "text-[#6b7280]", icon: null },
 };
 
 type Upload = {
-  id: number;
+  id: string;
   title: string;
   size: string;
-  type: "doc" | "pdf" | "pptx";
+  type: string;
   course: string;
   date: string;
-  status: "In Review" | "Approved" | "Rejected";
+  status: string;
   points: string;
 };
 
 export default function FullUploadsTable({ uploads }: { uploads: Upload[] }) {
   return (
-    <div className="bg-white dark:bg-[#1a1d24] border border-[#f2f4f7] dark:border-[#2a2e37] rounded-2xl overflow-hidden overflow-x-auto">
-      <div className="flex items-center bg-[#fcfdfd] dark:bg-[#15171d] border-b border-[#f2f4f7] dark:border-[#2a2e37] min-w-[750px]">
+    <div className="bg-white border border-[#f2f4f7] rounded-2xl overflow-hidden overflow-x-auto">
+      <div className="flex items-center bg-[#fcfdfd] border-b border-[#f2f4f7] min-w-[750px]">
         {columns.map((col) => (
           <p
             key={col}
-            className="flex-1 font-bold text-lg text-[#212121] dark:text-white tracking-tight px-6 py-6 first:pl-8 whitespace-nowrap"
+            className="flex-1 font-bold text-lg text-[#212121] tracking-tight px-6 py-6 first:pl-8 whitespace-nowrap"
           >
             {col}
           </p>
@@ -45,26 +46,26 @@ export default function FullUploadsTable({ uploads }: { uploads: Upload[] }) {
         {uploads.map((upload) => {
           const style = statusStyles[upload.status];
           return (
-            <div key={upload.id} className="flex items-center border-b border-[#f2f4f7] dark:border-[#2a2e37] last:border-b-0">
+            <div key={upload.id} className="flex items-center border-b border-[#f2f4f7] last:border-b-0">
               <div className="flex-1 flex items-center gap-4 px-8 py-8">
                 <Image src={fileIcons[upload.type]} alt="" width={28} height={28} />
                 <div>
-                  <p className="text-base text-[#212121] dark:text-white">{upload.title}</p>
+                  <p className="text-base text-[#212121]">{upload.title}</p>
                   <p className="text-xs text-[#909dad]">{upload.size}</p>
                 </div>
               </div>
-              <p className="flex-1 text-base text-[#101828] dark:text-[#d5d8dd] px-6">{upload.course}</p>
-              <div className="flex-1 flex items-center gap-1.5 px-6 text-sm text-[#4a5565] dark:text-[#d5d8dd]">
+              <p className="flex-1 text-base text-[#101828] px-6">{upload.course}</p>
+              <div className="flex-1 flex items-center gap-1.5 px-6 text-sm text-[#4a5565]">
                 <Calendar size={14} /> {upload.date}
               </div>
               <div className="flex-1 px-6">
-                <div className={`${style.bg} ${style.text} flex items-center gap-1 px-2.5 py-1 rounded-full w-fit text-xs`}>
-                  {style.icon} {upload.status}
+                <div className={`${style?.bg || "bg-[#f3f4f6]"} ${style?.text || "text-[#6b7280]"} flex items-center gap-1 px-2.5 py-1 rounded-full w-fit text-xs`}>
+                  {style?.icon} {upload.status}
                 </div>
               </div>
-              <p className="flex-1 text-base text-[#101828] dark:text-[#d5d8dd] px-6">{upload.points}</p>
+              <p className="flex-1 text-base text-[#101828] px-6">{upload.points}</p>
               <div className="w-[140px] shrink-0 flex items-center justify-center gap-6">
-                <button className="text-[#212121] dark:text-[#c5c8cf] hover:text-[#006dff]">
+                <button className="text-[#212121] hover:text-[#006dff]">
                   <ExternalLink size={20} />
                 </button>
                 <button className="text-[#006dff]">

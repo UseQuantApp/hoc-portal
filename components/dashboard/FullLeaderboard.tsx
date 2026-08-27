@@ -1,24 +1,7 @@
 "use client";
 
 import Image from "next/image";
-
-type Leader = {
-  rank: number | "medal-1" | "medal-2" | "medal-3";
-  name: string;
-  tier: string;
-  materials: number;
-  points: string;
-  avatar: string;
-  isYou?: boolean;
-};
-
-const leaders: Leader[] = [
-  { rank: "medal-1", name: "Olasunkanmi Abdul Molik", tier: "T 32", materials: 200, points: "13,000", avatar: "/images/leaderboard-avatar-1.png" },
-  { rank: "medal-2", name: "Marcus Johnson", tier: "T 32", materials: 200, points: "12,500", avatar: "/images/leaderboard-avatar-2.png" },
-  { rank: "medal-3", name: "Priya Patel", tier: "T 32", materials: 200, points: "11,000", avatar: "/images/leaderboard-avatar-3.png" },
-  { rank: 4, name: "Jordan Lee", tier: "T 32", materials: 200, points: "10,000", avatar: "/images/leaderboard-avatar-4.png" },
-  { rank: 12, name: "Akorede Habeebullah (you)", tier: "T 32", materials: 200, points: "12,000", avatar: "/images/avatar-you.png", isYou: true },
-];
+import type { Leader } from "@/components/dashboard/LeaderboardCard";
 
 const medalIcon: Record<string, string> = {
   "medal-1": "/images/medal-gold.svg",
@@ -26,7 +9,7 @@ const medalIcon: Record<string, string> = {
   "medal-3": "/images/medal-bronze.svg",
 };
 
-export default function FullLeaderboard() {
+export default function FullLeaderboard({ leaders }: { leaders: Leader[] }) {
   return (
     <div className="border border-[#ececec] bg-[#fbfbfb] rounded-2xl flex flex-col gap-2 lg:gap-4 p-2 lg:p-4">
       {leaders.map((leader) => (

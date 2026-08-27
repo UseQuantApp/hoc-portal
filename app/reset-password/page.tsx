@@ -3,35 +3,12 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
 import { Eye, EyeOff } from "lucide-react";
-import { apiFetch } from "@/lib/api";
 
-export default function SignInPage() {
-  const router = useRouter();
+export default function ResetPasswordPage() {
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loginError, setLoginError] = useState("");
-  const [isLoggingIn, setIsLoggingIn] = useState(false);
-
-  const handleSignIn = async () => {
-    setLoginError("");
-    setIsLoggingIn(true);
-    try {
-      const res = await apiFetch("/auth/student-login", {
-        method: "POST",
-        body: JSON.stringify({ email, password }),
-      });
-      localStorage.setItem("quant_token", res.data.token);
-      router.push("/dashboard");
-    } catch (err) {
-      setLoginError(err instanceof Error ? err.message : "Login failed.");
-    } finally {
-      setIsLoggingIn(false);
-    }
-  };
+  const [showConfirm, setShowConfirm] = useState(false);
 
   return (
     <main className="min-h-screen bg-[#fbfbfb] flex flex-col items-center">
@@ -40,45 +17,25 @@ export default function SignInPage() {
       </div>
 
       <div className="w-full max-w-[1100px] flex flex-col lg:flex-row gap-10 lg:gap-16 items-center px-6 py-8 lg:p-8">
-        {/* Left: Sign in form */}
-        <div className="w-full lg:w-1/2 flex flex-col gap-8 lg:gap-10 max-w-[393px] mx-auto lg:mx-0">
-          <div className="w-12 h-1 bg-[#006dff] rounded-full mx-auto lg:mx-0" />
-
+        {/* Left: New password form */}
+        <div className="w-full lg:w-1/2 flex flex-col gap-8 max-w-[393px] mx-auto lg:mx-0">
           <div className="flex flex-col gap-2 text-center lg:text-left">
-            <h1 className="text-xl lg:text-[28px] font-bold text-[#212121]">Welcome back</h1>
+            <h1 className="text-xl lg:text-[28px] font-bold text-[#212121]">Set new password</h1>
             <p className="text-sm lg:text-base text-[#212121]">
-              Sign in to your Campus Scholar account
+              Enter your new password below
             </p>
           </div>
 
           <form className="flex flex-col gap-6">
             <div className="flex flex-col gap-4">
               <div className="flex flex-col gap-3">
-                <label htmlFor="email" className="text-sm lg:text-base font-bold text-[#212121]">
-                  Email Address
-                </label>
-                <div className="bg-white border-[1.5px] border-[#f4f4f4] rounded-xl p-4">
-                  <input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@example.com"
-                    className="w-full text-base text-[#212121] placeholder:text-[#21212180] outline-none bg-transparent"
-                  />
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-3">
-                <label htmlFor="password" className="text-sm lg:text-base font-bold text-[#212121]">
-                  Password
+                <label htmlFor="new-password" className="text-sm lg:text-base font-bold text-[#212121]">
+                  New Password
                 </label>
                 <div className="bg-white border-[1.5px] border-[#f4f4f4] rounded-xl p-4 flex items-center gap-2.5">
                   <input
-                    id="password"
+                    id="new-password"
                     type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••••"
                     className="w-full text-base text-[#212121] placeholder:text-[#21212180] outline-none bg-transparent"
                   />
@@ -87,31 +44,31 @@ export default function SignInPage() {
                   </button>
                 </div>
               </div>
+
+              <div className="flex flex-col gap-3">
+                <label htmlFor="confirm-password" className="text-sm lg:text-base font-bold text-[#212121]">
+                  Confirm New Password
+                </label>
+                <div className="bg-white border-[1.5px] border-[#f4f4f4] rounded-xl p-4 flex items-center gap-2.5">
+                  <input
+                    id="confirm-password"
+                    type={showConfirm ? "text" : "password"}
+                    placeholder="••••••••••"
+                    className="w-full text-base text-[#212121] placeholder:text-[#21212180] outline-none bg-transparent"
+                  />
+                  <button type="button" onClick={() => setShowConfirm((v) => !v)} className="text-[#9f9f9f] shrink-0">
+                    {showConfirm ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
+              </div>
             </div>
 
-            <Link href="/forgot-password" className="text-sm lg:text-base text-[#006dff] w-fit">
-              Forgot password?
-            </Link>
-
-            {loginError && (
-              <p className="text-xs font-bold text-[#ff3b3b] text-center">{loginError}</p>
-            )}
-
-            <button
-              type="button"
-              onClick={handleSignIn}
-              disabled={isLoggingIn}
-              className="w-full bg-[#f60] disabled:opacity-50 text-white text-base lg:text-lg font-bold lowercase py-3 rounded-xl hover:bg-[#e55600] transition-colors"
+            <Link
+              href="/"
+              className="w-full bg-[#f60] text-white text-base lg:text-lg font-bold py-3 rounded-xl hover:bg-[#e55600] transition-colors text-center block"
             >
-              {isLoggingIn ? "signing in..." : "sign in"}
-            </button>
-
-            <p className="text-sm lg:text-base text-center text-[#21212180]">
-              Don&apos;t have an account?{" "}
-              <Link href="/sign-up" className="font-bold text-[#006dff]">
-                Sign up
-              </Link>
-            </p>
+              Save Password
+            </Link>
           </form>
         </div>
 

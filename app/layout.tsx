@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
-import { ThemeProvider } from "@/lib/theme-context";
 
-const jakarta = Plus_Jakarta_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+const jakarta = localFont({
+  src: [
+    { path: "../fonts/CodecPro-Regular.ttf", weight: "400", style: "normal" },
+    { path: "../fonts/CodecPro-Bold.ttf", weight: "700", style: "normal" },
+  ],
   variable: "--font-jakarta",
 });
 
@@ -21,9 +22,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${jakarta.variable} font-sans antialiased bg-[#fbfbfb] dark:bg-[#0f1115] transition-colors`}>
-     <ThemeProvider>{children}</ThemeProvider>
-     </body>
+      <body className={`${jakarta.variable} font-sans antialiased bg-[#fbfbfb]`}>
+        {children}
+      </body>
     </html>
   );
 }

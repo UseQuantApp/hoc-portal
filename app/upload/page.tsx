@@ -1,14 +1,23 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import Navbar from "@/components/dashboard/Navbar";
 import Image from "next/image";
 import { ChevronDown, AlertTriangle, Upload } from "lucide-react";
+import { apiFetchFormData } from "@/lib/api";
 
 const levels = ["100", "200", "300", "400", "500"];
-const semesters = ["1st Semester", "2nd Semester"];
+const semesters = ["first", "second"];
+const categories = [
+  { value: "lecture_note", label: "Lecture Notes" },
+  { value: "exam_summary", label: "Exam Summary" },
+  { value: "past_question", label: "Past Question" },
+  { value: "other", label: "Other" },
+];
 
 export default function UploadPage() {
+  const router = useRouter();
   const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [title, setTitle] = useState("");
@@ -17,14 +26,19 @@ export default function UploadPage() {
   const [department, setDepartment] = useState("");
   const [level, setLevel] = useState("");
   const [semester, setSemester] = useState("");
+  const [session, setSession] = useState("2024/2025");
+  const [creditUnits, setCreditUnits] = useState("3");
   const [tags, setTags] = useState("");
+  const [category, setCategory] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
 
   const handleCourseCodeChange = (value: string) => {
     setCourseCode(value);
     const digits = value.match(/\d+/);
     if (digits) {
       const lastDigit = Number(digits[0][digits[0].length - 1]);
-      setSemester(lastDigit % 2 === 0 ? "2nd Semester" : "1st Semester");
+      setSemester(lastDigit % 2 === 0 ? "second" : "first");
     }
   };
 
@@ -34,12 +48,35 @@ export default function UploadPage() {
     if (e.dataTransfer.files?.[0]) setFile(e.dataTransfer.files[0]);
   }, []);
 
-  const isValid = file && title && courseCode && department;
+  const isValid = file && title && courseCode && department && category;
 
   const handleSubmit = async () => {
     if (!isValid) return;
-    // TODO: backend — upload `file` + form fields to the upload API,
-    // show processing loader, then route to success/review overlay per the AI validation flow
+    setUploadError("");
+    setIsUploading(true);
+
+    try {
+      const formData = new FormData();
+      formData.append("pdf", file);
+      formData.append("title", title);
+      formData.append("courseCode", courseCode);
+      formData.append("courseTitle", courseName);
+      formData.append("university", "LASU");
+      formData.append("department", department);
+      formData.append("category", category);
+      formData.append("level", level);
+      formData.append("session", session);
+      formData.append("semester", semester);
+      formData.append("creditUnits", creditUnits);
+      formData.append("tags", tags);
+
+      await apiFetchFormData("/documents/mine", formData);
+      router.push("/uploads");
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : "Upload failed.");
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   return (
@@ -148,7 +185,7 @@ export default function UploadPage() {
                 >
                   <option value="">Select Semester</option>
                   {semesters.map((s) => (
-                    <option key={s} value={s}>{s}</option>
+                    <option key={s} value={s}>{s === "first" ? "1st Semester" : "2nd Semester"}</option>
                   ))}
                 </select>
                 <ChevronDown size={20} className="text-[#212121] shrink-0" />
@@ -163,6 +200,41 @@ export default function UploadPage() {
                 />
               </Field>
             </div>
+
+            <Field label="Category*">
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className="w-full bg-transparent outline-none text-base text-[#212121] appearance-none cursor-pointer"
+              >
+                <option value="">Select Category</option>
+                {categories.map((item) => (
+                  <option key={item.value} value={item.value}>{item.label}</option>
+                ))}
+              </select>
+              <ChevronDown size={20} className="text-[#212121] shrink-0" />
+            </Field>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-5">
+              <Field label="Session">
+                <input
+                  value={session}
+                  onChange={(e) => setSession(e.target.value)}
+                  placeholder="e.g. 2024/2025"
+                  className="w-full bg-transparent outline-none text-base text-[#212121] placeholder:text-[#21212180]"
+                />
+              </Field>
+
+              <Field label="Credit Units">
+                <input
+                  type="number"
+                  value={creditUnits}
+                  onChange={(e) => setCreditUnits(e.target.value)}
+                  placeholder="e.g. 3"
+                  className="w-full bg-transparent outline-none text-base text-[#212121] placeholder:text-[#21212180]"
+                />
+              </Field>
+            </div>
           </div>
         </div>
 
@@ -173,14 +245,18 @@ export default function UploadPage() {
           </p>
         </div>
 
+        {uploadError && (
+          <p className="text-xs font-bold text-[#ff3b3b] text-center">{uploadError}</p>
+        )}
+
         <div className="flex flex-col lg:flex-row-reverse gap-4">
           <button
             onClick={handleSubmit}
-            disabled={!isValid}
+            disabled={!isValid || isUploading}
             className="bg-[#006dff] disabled:opacity-50 rounded-xl py-3 lg:px-10 text-lg text-white flex items-center justify-center gap-2 lg:flex-1"
           >
             <Upload size={18} />
-            Upload Document
+            {isUploading ? "Uploading..." : "Upload Document"}
           </button>
           <button className="bg-white border border-[#e5e5e5] rounded-lg py-3 lg:px-10 text-lg text-[#212121] capitalize lg:flex-1">
             Cancel

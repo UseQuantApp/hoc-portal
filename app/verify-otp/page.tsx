@@ -1,14 +1,28 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Header from "@/components/Header";
 import StepIndicator from "@/components/StepIndicator";
+import { apiFetch } from "@/lib/api";
 
-const RESEND_COOLDOWN = 54; // seconds — backend should confirm/enforce the real value
+const RESEND_COOLDOWN = 54;
 
 export default function VerifyOtpPage() {
+  const router = useRouter();
+  const [email, setEmail] = useState("");
   const [secondsLeft, setSecondsLeft] = useState(RESEND_COOLDOWN);
+  const [otpDigits, setOtpDigits] = useState(["", "", "", "", "", ""]);
+  const [otpError, setOtpError] = useState(false);
+  const [tooManyAttempts, setTooManyAttempts] = useState(false);
+  const [attemptCount, setAttemptCount] = useState(0);
+  const [isVerifying, setIsVerifying] = useState(false);
+
+  useEffect(() => {
+    const storedEmail = sessionStorage.getItem("quant_signup_email");
+    if (storedEmail) setEmail(storedEmail);
+  }, []);
 
   useEffect(() => {
     if (secondsLeft <= 0) return;
@@ -19,16 +33,39 @@ export default function VerifyOtpPage() {
   }, [secondsLeft]);
 
   const canResend = secondsLeft === 0;
-
   const formattedTime = `00:${secondsLeft.toString().padStart(2, "0")}`;
 
   const handleResend = async () => {
     if (!canResend) return;
+    // TODO: backend — no dedicated resend-email-otp endpoint exists yet; confirm with backend dev
+    setSecondsLeft(RESEND_COOLDOWN);
+    setOtpError(false);
+    setTooManyAttempts(false);
+    setAttemptCount(0);
+  };
 
-    // TODO: call resend OTP API here, e.g.:
-    // await fetch("/api/auth/resend-otp", { method: "POST", body: JSON.stringify({ phone: "+2347012345678" }) });
+  const handleVerify = async () => {
+    const code = otpDigits.join("");
+    if (code.length !== 6 || !email) return;
 
-    setSecondsLeft(RESEND_COOLDOWN); // restart the cooldown once resend is triggered
+    setIsVerifying(true);
+    try {
+      await apiFetch("/auth/verify-email", {
+        method: "POST",
+        body: JSON.stringify({ email, code }),
+      });
+      router.push("/email-verified");
+    } catch {
+      const nextCount = attemptCount + 1;
+      setAttemptCount(nextCount);
+      if (nextCount >= 3) {
+        setTooManyAttempts(true);
+      } else {
+        setOtpError(true);
+      }
+    } finally {
+      setIsVerifying(false);
+    }
   };
 
   return (
@@ -37,7 +74,7 @@ export default function VerifyOtpPage() {
         <Header />
       </div>
 
-      <div className="w-full max-w-[1100px] flex flex-col lg:flex-row gap-10 lg:gap-16 items-center lg:items-start px-6 py-8 lg:p-8">
+      <div className="w-full max-w-[1100px] flex flex-col lg:flex-row gap-10 lg:gap-16 items-center px-6 py-8 lg:p-8">
         {/* Left: Illustration panel — desktop only */}
         <div className="hidden lg:block w-full lg:w-1/2 relative bg-[#ddefff] rounded-3xl overflow-hidden aspect-[644/953] max-w-[644px]">
           <p className="absolute top-[7.6%] left-1/2 -translate-x-1/2 w-[75%] text-center text-2xl md:text-[28px] leading-tight text-[#212121]">
@@ -72,38 +109,66 @@ export default function VerifyOtpPage() {
           <div className="flex flex-col items-center gap-6 lg:gap-8 w-full text-center">
             <div className="flex flex-col items-center gap-2 lg:gap-4">
               <h1 className="text-xl lg:text-[28px] font-bold text-[#212121]">
-                Enter verification Code (OTP)
+                Check your email
               </h1>
               <p className="text-base lg:text-xl text-[#212121]">
-                We sent a 6-digit code to <span className="font-bold">+234 701 234 5678</span>
+                We&apos;ve sent a 6-digit verification code to{" "}
+                <span className="font-bold text-[#006dff]">{email || "your email"}</span>. Enter the code below to verify your email.
               </p>
             </div>
 
-            <div className="flex gap-2 lg:gap-3.5">
-              {["2", "", "", "", "", ""].map((val, i) => (
-                <input
-                  key={i}
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={1}
-                  defaultValue={val}
-                  className="size-12 lg:size-16 text-center text-xl lg:text-2xl rounded-lg border border-[#e0e0e0] focus:border-[#006dff] focus:outline-none text-black"
-                />
-              ))}
+            <div className="flex flex-col items-center gap-3 w-full">
+              <div className="flex gap-2 lg:gap-3.5">
+                {otpDigits.map((digit, i) => (
+                  <input
+                    key={i}
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={1}
+                    value={digit}
+                    disabled={tooManyAttempts}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/[^0-9]/g, "");
+                      const next = [...otpDigits];
+                      next[i] = val;
+                      setOtpDigits(next);
+                      if (val && i < 5) {
+                        document.getElementById(`otp-${i + 1}`)?.focus();
+                      }
+                    }}
+                    id={`otp-${i}`}
+                    className={`size-12 lg:size-14 text-center text-xl lg:text-2xl rounded-lg border focus:outline-none text-black disabled:opacity-50 disabled:bg-[#f6f6f6] ${
+                      otpError ? "border-[#e3e3e3]" : "border-[#e0e0e0] focus:border-[#006dff]"
+                    }`}
+                  />
+                ))}
+              </div>
+
+              {otpError && !tooManyAttempts && (
+                <p className="text-xs font-bold text-[#ff3b3b] text-center">
+                  The code you entered is incorrect. Please check your email and try again.
+                </p>
+              )}
+              {tooManyAttempts && (
+                <p className="text-xs font-bold text-[#ff3b3b] text-center max-w-[360px]">
+                  Too many incorrect attempts. Please wait a moment before trying again, or request a new code.
+                </p>
+              )}
             </div>
 
             <div className="flex flex-col items-center gap-3 lg:gap-3.5 w-full">
-              <button className="w-full bg-[#006dff] text-white text-base lg:text-lg py-3 rounded-xl hover:bg-[#005ce0] transition-colors">
-                Verify &amp; Continue
+              <button
+                onClick={handleVerify}
+                disabled={tooManyAttempts || isVerifying}
+                className="w-full bg-[#f60] disabled:opacity-50 text-white text-base lg:text-lg font-bold py-3 rounded-xl hover:bg-[#e55600] transition-colors"
+              >
+                {isVerifying ? "verifying..." : "Verify email"}
               </button>
 
               <p className="text-sm lg:text-lg">
                 <span className="text-black/50">Didn&apos;t receive it? </span>
                 {canResend ? (
-                  <button
-                    onClick={handleResend}
-                    className="font-bold text-[#006dff] hover:underline"
-                  >
+                  <button onClick={handleResend} className="font-bold text-[#006dff] hover:underline">
                     Resend
                   </button>
                 ) : (
