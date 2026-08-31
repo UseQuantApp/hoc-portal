@@ -1,13 +1,7 @@
 const API_BASE = "https://quant-server.up.railway.app/api/v1";
 
-export async function apiFetch(
-  path: string,
-  options: RequestInit = {}
-) {
-  const token =
-    typeof window !== "undefined"
-      ? localStorage.getItem("quant_token")
-      : null;
+export async function apiFetch(path: string, options: RequestInit = {}) {
+  const token = typeof window !== "undefined" ? localStorage.getItem("quant_token") : null;
 
   const res = await fetch(`${API_BASE}${path}`, {
     ...options,
@@ -22,7 +16,6 @@ export async function apiFetch(
 
   if (!res.ok) {
     console.error("API error response:", data); // temporary — remove once fully working
-
     const detailMessage =
       typeof data.details === "string"
         ? data.details
@@ -31,25 +24,14 @@ export async function apiFetch(
         : data.details
         ? JSON.stringify(data.details)
         : "";
-
-    throw new Error(
-      detailMessage ||
-        data.message ||
-        "Something went wrong. Please try again."
-    );
+    throw new Error(detailMessage || data.message || "Something went wrong. Please try again.");
   }
 
   return data;
 }
 
-export async function apiFetchFormData(
-  path: string,
-  formData: FormData
-) {
-  const token =
-    typeof window !== "undefined"
-      ? localStorage.getItem("quant_token")
-      : null;
+export async function apiFetchFormData(path: string, formData: FormData) {
+  const token = typeof window !== "undefined" ? localStorage.getItem("quant_token") : null;
 
   const res = await fetch(`${API_BASE}${path}`, {
     method: "POST",
@@ -63,7 +45,6 @@ export async function apiFetchFormData(
 
   if (!res.ok) {
     console.error("API error response:", data);
-
     const detailMessage =
       typeof data.details === "string"
         ? data.details
@@ -72,12 +53,7 @@ export async function apiFetchFormData(
         : data.details
         ? JSON.stringify(data.details)
         : "";
-
-    throw new Error(
-      detailMessage ||
-        data.message ||
-        "Something went wrong. Please try again."
-    );
+    throw new Error(detailMessage || data.message || "Something went wrong. Please try again.");
   }
 
   return data;

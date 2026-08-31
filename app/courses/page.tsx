@@ -1,147 +1,290 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import Navbar from '@/components/dashboard/Navbar';
-import { BookOpen, Search, Download, FileText, CheckCircle, Clock } from 'lucide-react';
+import { useState, useEffect } from "react";
+import Navbar from "@/components/dashboard/Navbar";
+import { Plus, Search, Loader } from "lucide-react";
+import { apiFetch } from "@/lib/api";
 
-const registeredCourses = [
-  {
-    code: 'MEE 305',
-    title: 'Applied Thermodynamics I',
-    units: 3,
-    lecturer: 'Prof. O. A. Adebayo',
-    materialsCount: 14,
-    status: 'In Progress',
-    color: 'from-blue-500 to-indigo-600',
-  },
-  {
-    code: 'ECE 301',
-    title: 'Electric Circuit Theory',
-    units: 3,
-    lecturer: 'Dr. K. E. Okon',
-    materialsCount: 9,
-    status: 'In Progress',
-    color: 'from-emerald-500 to-teal-600',
-  },
-  {
-    code: 'MEE 401',
-    title: 'Fluid Mechanics & Turbomachinery',
-    units: 4,
-    lecturer: 'Dr. M. S. Lawal',
-    materialsCount: 21,
-    status: 'In Progress',
-    color: 'from-purple-500 to-indigo-600',
-  },
-  {
-    code: 'CSC 302',
-    title: 'Operating Systems & Architecture',
-    units: 3,
-    lecturer: 'Engr. Mrs. F. Bello',
-    materialsCount: 18,
-    status: 'In Progress',
-    color: 'from-amber-500 to-orange-600',
-  },
-  {
-    code: 'MAT 201',
-    title: 'Advanced Mathematical Methods',
-    units: 3,
-    lecturer: 'Dr. T. O. Sanusi',
-    materialsCount: 12,
-    status: 'In Progress',
-    color: 'from-rose-500 to-red-600',
-  },
-];
+type Course = {
+  _id: string;
+  code: string;
+  title: string;
+  department: string;
+  level: string;
+  creditUnits: number;
+};
+
+type EnrolledCourse = Course & {
+  enrolledAt: string;
+};
+
+const session = "2024/2025";
+const semester = "first";
 
 export default function CoursesPage() {
-  const [search, setSearch] = useState('');
-  const [level, setLevel] = useState('All Levels');
+  const [activeTab, setActiveTab] = useState<"enrolled" | "browse">("enrolled");
+  const [enrolledCourses, setEnrolledCourses] = useState<EnrolledCourse[]>([]);
+  const [browseCourses, setBrowseCourses] = useState<Course[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [departmentFilter, setDepartmentFilter] = useState("");
+  const [levelFilter, setLevelFilter] = useState("");
+  
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string>("");
+  const [isEnrolling, setIsEnrolling] = useState<string>("");
+  const [enrollSuccess, setEnrollSuccess] = useState<string>("");
 
-  const filtered = registeredCourses.filter((c) =>
-    c.code.toLowerCase().includes(search.toLowerCase()) ||
-    c.title.toLowerCase().includes(search.toLowerCase()) ||
-    c.lecturer.toLowerCase().includes(search.toLowerCase())
-  );
+  // Fetch enrolled courses
+  useEffect(() => {
+    async function fetchEnrolled() {
+      try {
+        const data = await apiFetch(`/courses/mine?session=${session}&semester=${semester}`);
+        setEnrolledCourses(data.data || []);
+      } catch (err) {
+        console.error("Failed to fetch enrolled courses:", err);
+        setError(err instanceof Error ? err.message : "Failed to load enrolled courses.");
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchEnrolled();
+  }, []);
+
+  // Fetch browse/available courses
+  async function fetchBrowseCourses() {
+    try {
+      setIsLoading(true);
+      const queryParams = new URLSearchParams();
+      if (searchQuery) queryParams.append("search", searchQuery);
+      if (departmentFilter) queryParams.append("department", departmentFilter);
+      if (levelFilter) queryParams.append("level", levelFilter);
+      
+      const url = `/courses?${queryParams.toString()}`;
+      const data = await apiFetch(url);
+      setBrowseCourses(data.data || []);
+    } catch (err) {
+      console.error("Failed to fetch browse courses:", err);
+      setError(err instanceof Error ? err.message : "Failed to load courses.");
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    if (activeTab === "browse") {
+      fetchBrowseCourses();
+    }
+  }, [activeTab, searchQuery, departmentFilter, levelFilter]);
+
+  const handleEnroll = async (courseIds: string[]) => {
+    try {
+      setIsEnrolling(courseIds.join(","));
+      setEnrollSuccess("");
+      
+      const data = await apiFetch("/courses/enroll", {
+        method: "POST",
+        body: JSON.stringify({
+          courseIds,
+          session,
+          semester,
+        }),
+      });
+
+      setEnrollSuccess("Enrolled successfully!");
+      // Refresh enrolled courses
+      const enrolledData = await apiFetch(`/courses/mine?session=${session}&semester=${semester}`);
+      setEnrolledCourses(enrolledData.data || []);
+      
+      // Refresh browse courses
+      await fetchBrowseCourses();
+      
+      setTimeout(() => setEnrollSuccess(""), 3000);
+    } catch (err) {
+      console.error("Failed to enroll:", err);
+      setError(err instanceof Error ? err.message : "Failed to enroll in course.");
+    } finally {
+      setIsEnrolling("");
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-[#fbfbfb] text-[#212121] flex flex-col items-center">
-      <div className="w-full max-w-[1240px] px-4 sm:px-6 py-4 flex flex-col gap-6">
-        <Navbar showBackButton backHref="/dashboard" title="Enrolled Courses" />
-
-        <div className="bg-white border border-[#f2f4f7] rounded-3xl p-6 sm:p-8 shadow-xs flex flex-col gap-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#f2f4f7] pb-4">
-            <div>
-              <h1 className="text-xl sm:text-2xl font-extrabold text-[#1e293b] tracking-tight">
-                Course Curriculum & Notes
-              </h1>
-              <p className="text-xs text-[#64748b]">
-                Access department syllabus, lecture slides, and past papers organized by course
-              </p>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94a3b8]" size={14} />
-                <input
-                  type="text"
-                  placeholder="Filter courses..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="w-48 sm:w-64 bg-[#f8fafc] border border-[#e2e8f0] focus:border-[#006dff] rounded-xl pl-9 pr-3 py-2 text-xs outline-none"
-                />
-              </div>
-
-              <select
-                value={level}
-                onChange={(e) => setLevel(e.target.value)}
-                className="bg-[#f8fafc] border border-[#e2e8f0] rounded-xl px-3 py-2 text-xs font-bold text-[#1e293b] outline-none cursor-pointer"
-              >
-                <option>All Levels</option>
-                <option>100 Level</option>
-                <option>200 Level</option>
-                <option>300 Level</option>
-                <option>400 Level</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {filtered.map((course) => (
-              <div
-                key={course.code}
-                className="bg-white border border-[#f2f4f7] hover:border-[#bfdbfe] rounded-2xl p-5 shadow-2xs hover:shadow-xs transition-all flex flex-col justify-between gap-4"
-              >
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-black bg-[#eff6ff] text-[#006dff] px-2.5 py-1 rounded-lg">
-                      {course.code}
-                    </span>
-                    <span className="text-[11px] font-semibold text-[#64748b]">
-                      {course.units} Credit Units
-                    </span>
-                  </div>
-
-                  <h3 className="font-bold text-base text-[#1e293b] line-clamp-1">{course.title}</h3>
-                  <p className="text-xs text-[#64748b]">Instructor: {course.lecturer}</p>
-                </div>
-
-                <div className="pt-3 border-t border-[#f2f4f7] flex items-center justify-between">
-                  <span className="text-xs font-semibold text-[#64748b] flex items-center gap-1.5">
-                    <FileText size={14} className="text-[#006dff]" />
-                    <span>{course.materialsCount} Documents</span>
-                  </span>
-
-                  <button
-                    onClick={() => alert(`Opening document drawer for ${course.code}`)}
-                    className="text-xs font-bold text-[#006dff] hover:underline cursor-pointer"
-                  >
-                    View Materials →
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+    <main className="min-h-screen bg-[#fbfbfb] flex flex-col items-center gap-6 lg:gap-8 px-4 md:px-16 py-6 lg:py-8">
+      <div className="w-full max-w-[1312px]">
+        <Navbar />
       </div>
-    </div>
+
+      <div className="w-full max-w-[1312px] flex flex-col gap-6 lg:gap-8">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 lg:gap-0">
+          <p className="text-xl lg:text-[28px] font-bold text-[#212121]">Courses</p>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex gap-2 border-b border-[#e5e5e5]">
+          <button
+            onClick={() => setActiveTab("enrolled")}
+            className={`px-4 py-3 font-medium border-b-2 transition-colors ${
+              activeTab === "enrolled"
+                ? "border-[#006dff] text-[#006dff]"
+                : "border-transparent text-[#9f9f9f]"
+            }`}
+          >
+            Enrolled Courses ({enrolledCourses.length})
+          </button>
+          <button
+            onClick={() => setActiveTab("browse")}
+            className={`px-4 py-3 font-medium border-b-2 transition-colors ${
+              activeTab === "browse"
+                ? "border-[#006dff] text-[#006dff]"
+                : "border-transparent text-[#9f9f9f]"
+            }`}
+          >
+            Browse Courses
+          </button>
+        </div>
+
+        {error && (
+          <div className="bg-[#ffe2e2] border border-[#ff3b3b] rounded-lg px-4 py-3 text-[#9f0712]">
+            {error}
+          </div>
+        )}
+
+        {enrollSuccess && (
+          <div className="bg-[#dcfce7] border border-[#016630] rounded-lg px-4 py-3 text-[#016630]">
+            {enrollSuccess}
+          </div>
+        )}
+
+        {/* Enrolled Courses Tab */}
+        {activeTab === "enrolled" && (
+          <div className="flex flex-col gap-4">
+            {isLoading ? (
+              <div className="bg-white rounded-2xl py-20 flex items-center justify-center">
+                <p className="text-[#9f9f9f]">Loading...</p>
+              </div>
+            ) : enrolledCourses.length === 0 ? (
+              <div className="bg-white rounded-2xl border border-[#f2f4f7] py-12 flex flex-col items-center gap-4">
+                <p className="text-[#212121] font-medium">No courses enrolled yet</p>
+                <button
+                  onClick={() => setActiveTab("browse")}
+                  className="bg-[#006dff] text-white px-4 py-2 rounded-lg flex items-center gap-2"
+                >
+                  <Plus size={16} /> Browse Courses
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {enrolledCourses.map((course) => (
+                  <div
+                    key={course._id}
+                    className="bg-white border border-[#f2f4f7] rounded-2xl p-6 hover:shadow-lg transition-shadow"
+                  >
+                    <p className="text-sm text-[#006dff] font-semibold">{course.code}</p>
+                    <p className="text-lg font-bold text-[#212121] mt-2">{course.title}</p>
+                    <div className="mt-4 space-y-2 text-sm text-[#9f9f9f]">
+                      <p>Department: {course.department}</p>
+                      <p>Level: {course.level}</p>
+                      <p>Credits: {course.creditUnits}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Browse Courses Tab */}
+        {activeTab === "browse" && (
+          <div className="flex flex-col gap-6">
+            {/* Filters */}
+            <div className="bg-white border border-[#f2f4f7] rounded-2xl p-4 lg:p-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="flex items-center bg-[#f6f6f6] border border-[#f4f4f4] rounded-xl px-4 py-3">
+                  <Search size={18} className="text-[#9f9f9f] mr-2" />
+                  <input
+                    placeholder="Search course title or code..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="flex-1 bg-transparent outline-none text-sm text-[#212121] placeholder:text-[#9f9f9f]"
+                  />
+                </div>
+                <select
+                  value={departmentFilter}
+                  onChange={(e) => setDepartmentFilter(e.target.value)}
+                  className="bg-[#f6f6f6] border border-[#f4f4f4] rounded-xl px-4 py-3 text-sm text-[#212121] outline-none"
+                >
+                  <option value="">All Departments</option>
+                  <option value="Engineering">Engineering</option>
+                  <option value="Business">Business</option>
+                  <option value="Science">Science</option>
+                  <option value="Medicine">Medicine</option>
+                </select>
+                <select
+                  value={levelFilter}
+                  onChange={(e) => setLevelFilter(e.target.value)}
+                  className="bg-[#f6f6f6] border border-[#f4f4f4] rounded-xl px-4 py-3 text-sm text-[#212121] outline-none"
+                >
+                  <option value="">All Levels</option>
+                  <option value="100">100 Level</option>
+                  <option value="200">200 Level</option>
+                  <option value="300">300 Level</option>
+                  <option value="400">400 Level</option>
+                  <option value="500">500 Level</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Browse Results */}
+            {isLoading ? (
+              <div className="bg-white rounded-2xl py-20 flex items-center justify-center">
+                <Loader className="animate-spin text-[#006dff]" />
+              </div>
+            ) : browseCourses.length === 0 ? (
+              <div className="bg-white rounded-2xl border border-[#f2f4f7] py-12 flex flex-col items-center gap-4">
+                <p className="text-[#212121]">No courses found matching your filters</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {browseCourses.map((course) => {
+                  const isAlreadyEnrolled = enrolledCourses.some(e => e._id === course._id);
+                  return (
+                    <div
+                      key={course._id}
+                      className="bg-white border border-[#f2f4f7] rounded-2xl p-6 hover:shadow-lg transition-shadow"
+                    >
+                      <p className="text-sm text-[#006dff] font-semibold">{course.code}</p>
+                      <p className="text-lg font-bold text-[#212121] mt-2">{course.title}</p>
+                      <div className="mt-4 space-y-2 text-sm text-[#9f9f9f]">
+                        <p>Department: {course.department}</p>
+                        <p>Level: {course.level}</p>
+                        <p>Credits: {course.creditUnits}</p>
+                      </div>
+                      <button
+                        onClick={() => handleEnroll([course._id])}
+                        disabled={isAlreadyEnrolled || isEnrolling === course._id}
+                        className={`w-full mt-6 py-2 rounded-lg font-medium transition-colors ${
+                          isAlreadyEnrolled
+                            ? "bg-[#e5e5e5] text-[#9f9f9f] cursor-not-allowed"
+                            : "bg-[#006dff] text-white hover:bg-[#0056cc]"
+                        }`}
+                      >
+                        {isEnrolling === course._id ? (
+                          <span className="flex items-center justify-center gap-2">
+                            <Loader size={14} className="animate-spin" /> Enrolling...
+                          </span>
+                        ) : isAlreadyEnrolled ? (
+                          "Already Enrolled"
+                        ) : (
+                          "Enroll"
+                        )}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </main>
   );
 }

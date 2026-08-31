@@ -1,127 +1,108 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { Lock, ArrowLeft, ArrowRight, ShieldCheck } from 'lucide-react';
+import { useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import Header from "@/components/Header";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function ResetPasswordPage() {
-  const router = useRouter();
-  const [code, setCode] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [isSuccess, setIsSuccess] = useState(false);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (newPassword !== confirmPassword) {
-      alert('Passwords do not match');
-      return;
-    }
-    setIsSuccess(true);
-  };
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   return (
-    <div className="min-h-screen bg-[#fbfbfb] text-[#212121] flex flex-col justify-between items-center p-4 sm:p-6">
-      <header className="w-full max-w-5xl flex items-center justify-between py-2">
-        <Link href="/" className="flex items-center gap-2.5">
-          <div className="size-9 rounded-xl bg-[#006dff] flex items-center justify-center text-white font-black text-lg shadow-xs">
-            Q
-          </div>
-          <span className="font-extrabold text-2xl text-[#006dff] tracking-tight">Quant</span>
-        </Link>
-        <Link href="/" className="text-xs font-bold text-[#64748b] hover:text-[#1e293b] flex items-center gap-1">
-          <ArrowLeft size={14} /> Back to Sign In
-        </Link>
-      </header>
+    <main className="min-h-screen bg-[#fbfbfb] flex flex-col items-center">
+      <div className="w-full max-w-[1100px]">
+        <Header />
+      </div>
 
-      <main className="w-full max-w-md my-8">
-        <div className="bg-white border border-[#f2f4f7] rounded-3xl p-6 sm:p-8 shadow-xs flex flex-col gap-6">
-          <div className="flex flex-col gap-1.5 text-center">
-            <div className="size-12 rounded-2xl bg-[#eff6ff] text-[#006dff] flex items-center justify-center mx-auto mb-1">
-              <ShieldCheck size={24} />
-            </div>
-            <h1 className="text-2xl font-extrabold text-[#1e293b] tracking-tight">Create New Password</h1>
-            <p className="text-xs text-[#64748b]">
-              Enter the reset token sent to your email and your new password.
+      <div className="w-full max-w-[1100px] flex flex-col lg:flex-row gap-10 lg:gap-16 items-center px-6 py-8 lg:p-8">
+        {/* Left: New password form */}
+        <div className="w-full lg:w-1/2 flex flex-col gap-8 max-w-[393px] mx-auto lg:mx-0">
+          <div className="flex flex-col gap-2 text-center lg:text-left">
+            <h1 className="text-xl lg:text-[28px] font-bold text-[#212121]">Set new password</h1>
+            <p className="text-sm lg:text-base text-[#212121]">
+              Enter your new password below
             </p>
           </div>
 
-          {isSuccess ? (
-            <div className="flex flex-col gap-4 text-center">
-              <div className="p-4 bg-[#ecfdf5] border border-[#a7f3d0] rounded-2xl flex flex-col items-center gap-2 text-xs text-[#065f46]">
-                <p className="font-bold text-sm">Password Reset Successful!</p>
-                <p className="text-[11px]">Your new credentials have been updated securely.</p>
+          <form className="flex flex-col gap-6">
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-3">
+                <label htmlFor="new-password" className="text-sm lg:text-base font-bold text-[#212121]">
+                  New Password
+                </label>
+                <div className="bg-white border-[1.5px] border-[#f4f4f4] rounded-xl p-4 flex items-center gap-2.5">
+                  <input
+                    id="new-password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="••••••••••"
+                    className="w-full text-base text-[#212121] placeholder:text-[#21212180] outline-none bg-transparent"
+                  />
+                  <button type="button" onClick={() => setShowPassword((v) => !v)} className="text-[#9f9f9f] shrink-0">
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
               </div>
 
-              <Link
-                href="/"
-                className="w-full bg-[#006dff] hover:bg-[#0056cc] text-white font-bold text-xs py-3 rounded-xl flex items-center justify-center gap-2 shadow-xs"
-              >
-                <span>Proceed to Sign In</span>
-                <ArrowRight size={14} />
-              </Link>
+              <div className="flex flex-col gap-3">
+                <label htmlFor="confirm-password" className="text-sm lg:text-base font-bold text-[#212121]">
+                  Confirm New Password
+                </label>
+                <div className="bg-white border-[1.5px] border-[#f4f4f4] rounded-xl p-4 flex items-center gap-2.5">
+                  <input
+                    id="confirm-password"
+                    type={showConfirm ? "text" : "password"}
+                    placeholder="••••••••••"
+                    className="w-full text-base text-[#212121] placeholder:text-[#21212180] outline-none bg-transparent"
+                  />
+                  <button type="button" onClick={() => setShowConfirm((v) => !v)} className="text-[#9f9f9f] shrink-0">
+                    {showConfirm ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
+              </div>
             </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-[#475569]">6-Digit Reset Code</label>
-                <input
-                  type="text"
-                  required
-                  maxLength={6}
-                  placeholder="123456"
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  className="w-full bg-[#f8fafc] border border-[#e2e8f0] focus:border-[#006dff] focus:bg-white rounded-xl px-4 py-2.5 text-center text-sm font-bold tracking-widest text-[#1e293b] outline-none"
-                />
-              </div>
 
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-[#475569]">New Password</label>
-                <div className="relative">
-                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#94a3b8]" size={16} />
-                  <input
-                    type="password"
-                    required
-                    placeholder="••••••••"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full bg-[#f8fafc] border border-[#e2e8f0] focus:border-[#006dff] focus:bg-white rounded-xl pl-10 pr-3 py-2.5 text-xs text-[#1e293b] outline-none"
-                  />
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-[#475569]">Confirm New Password</label>
-                <div className="relative">
-                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#94a3b8]" size={16} />
-                  <input
-                    type="password"
-                    required
-                    placeholder="••••••••"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full bg-[#f8fafc] border border-[#e2e8f0] focus:border-[#006dff] focus:bg-white rounded-xl pl-10 pr-3 py-2.5 text-xs text-[#1e293b] outline-none"
-                  />
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                className="w-full bg-[#006dff] hover:bg-[#0056cc] text-white font-bold text-xs py-3 rounded-xl flex items-center justify-center gap-2 shadow-xs cursor-pointer mt-2"
-              >
-                <span>Update Password</span>
-                <ArrowRight size={16} />
-              </button>
-            </form>
-          )}
+            <Link
+              href="/"
+              className="w-full bg-[#f60] text-white text-base lg:text-lg font-bold py-3 rounded-xl hover:bg-[#e55600] transition-colors text-center block"
+            >
+              Save Password
+            </Link>
+          </form>
         </div>
-      </main>
 
-      <footer className="text-center text-xs text-[#94a3b8] py-4">
-        © 2025 Quant Campus Academic System.
-      </footer>
-    </div>
+        {/* Right: Blue promo panel */}
+        <div className="hidden lg:block w-full lg:w-1/2 relative bg-[#006dff] rounded-3xl overflow-hidden aspect-[644/953] max-w-[644px]">
+          <p className="absolute top-8 left-1/2 -translate-x-1/2 w-[80%] text-center text-white text-2xl md:text-[32px] leading-tight">
+            Your department&apos;s <span className="font-bold">entire library</span>
+          </p>
+
+          <div className="absolute left-[5%] top-[20%] w-[90%] aspect-square opacity-90">
+            <Image src="/images/blob-bg.svg" alt="" fill className="object-contain" />
+          </div>
+
+          <div className="absolute left-1/2 top-[58%] -translate-x-1/2 -translate-y-1/2 w-[85%] max-w-[380px] rotate-[-7deg]">
+            <Image
+              src="/images/phone-mockup.png"
+              alt="WhatsApp chat on phone showing Quant assistant"
+              width={454}
+              height={646}
+              className="w-full h-auto"
+            />
+          </div>
+
+          <div className="absolute right-[8%] top-[45%] w-[28%] max-w-[168px] rotate-[10deg]">
+            <div className="relative aspect-square">
+              <Image src="/images/badge-ellipse.svg" alt="" fill className="object-contain" />
+              <Image src="/images/star-badge.svg" alt="" fill className="object-contain" />
+              <div className="absolute inset-0 flex items-center justify-center text-center text-white text-xs leading-tight px-4">
+                Your Academic Success Begins <span className="font-bold">Here!</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
   );
 }

@@ -1,18 +1,6 @@
 import Image from "next/image";
 
-export interface HeaderProps {
-  showBack?: boolean;
-  backHref?: string;
-  title?: string;
-  subtitle?: string;
-}
-
-export default function Header({
-  showBack,
-  backHref,
-  title,
-  subtitle,
-}: HeaderProps = {}) {
+export default function Header() {
   return (
     <div className="w-full mt-6 flex items-center justify-between lg:justify-start gap-6 lg:gap-8 px-6 py-3 lg:px-0 lg:py-0 border-b border-[#e7e7e7] lg:border-0">
       <div className="flex items-center gap-2">

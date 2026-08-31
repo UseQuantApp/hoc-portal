@@ -1,98 +1,271 @@
-'use client';
+"use client";
 
-import React from 'react';
-import Navbar from '@/components/dashboard/Navbar';
-import { GraduationCap, Award, TrendingUp, Sparkles, BookOpen } from 'lucide-react';
+import { useState, useEffect } from "react";
+import Navbar from "@/components/dashboard/Navbar";
+import { TrendingUp, Award } from "lucide-react";
+import { apiFetch } from "@/lib/api";
 
-const semesterResults = [
-  { code: 'MEE 305', title: 'Applied Thermodynamics I', units: 3, grade: 'A', score: 78, gp: 5.0 },
-  { code: 'ECE 301', title: 'Electric Circuit Theory', units: 3, grade: 'A', score: 82, gp: 5.0 },
-  { code: 'MEE 401', title: 'Fluid Mechanics', units: 4, grade: 'B', score: 66, gp: 4.0 },
-  { code: 'CSC 302', title: 'Operating Systems', units: 3, grade: 'A', score: 74, gp: 5.0 },
-  { code: 'MAT 201', title: 'Engineering Math', units: 3, grade: 'B', score: 68, gp: 4.0 },
-  { code: 'GET 301', title: 'Engineer in Society', units: 2, grade: 'A', score: 85, gp: 5.0 },
-];
+type GradeRecord = {
+  _id: string;
+  course: string;
+  courseCode: string;
+  grade: string;
+  gradePoints: number;
+  creditUnits: number;
+  semester: string;
+};
+
+type CGPAData = {
+  cgpa: number;
+  totalCreditUnits: number;
+  semesterBreakdown: {
+    semester: string;
+    gpa: number;
+    creditUnits: number;
+  }[];
+};
+
+const session = "2024/2025";
+const semester = "first";
+
+const gradeColorMap: Record<string, string> = {
+  A: "bg-[#dcfce7] text-[#016630]",
+  B: "bg-[#d1e9ff] text-[#0056cc]",
+  C: "bg-[#fef9c2] text-[#894b00]",
+  D: "bg-[#ffe2e2] text-[#9f0712]",
+  F: "bg-[#f3f4f6] text-[#374151]",
+};
 
 export default function GradesPage() {
-  const totalUnits = semesterResults.reduce((acc, r) => acc + r.units, 0);
-  const totalWeightedPoints = semesterResults.reduce((acc, r) => acc + r.units * r.gp, 0);
-  const gpa = (totalWeightedPoints / totalUnits).toFixed(2);
+  const [grades, setGrades] = useState<GradeRecord[]>([]);
+  const [cgpaData, setCGPAData] = useState<CGPAData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string>("");
+
+  useEffect(() => {
+    async function fetchGrades() {
+      try {
+        setIsLoading(true);
+        setError("");
+
+        // Fetch grades
+        const gradesData = await apiFetch(
+          `/grades/mine?session=${session}&semester=${semester}`
+        );
+        setGrades(gradesData.data || []);
+
+        // Fetch CGPA
+        const cgpaResponse = await apiFetch("/grades/mine/cgpa");
+        setCGPAData(cgpaResponse.data);
+      } catch (err) {
+        console.error("Failed to fetch grades:", err);
+        setError(err instanceof Error ? err.message : "Failed to load grades.");
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchGrades();
+  }, []);
+
+  const semesterGPA =
+    cgpaData?.semesterBreakdown.find(s => s.semester === semester)?.gpa || 0;
 
   return (
-    <div className="min-h-screen bg-[#fbfbfb] text-[#212121] flex flex-col items-center">
-      <div className="w-full max-w-[1240px] px-4 sm:px-6 py-4 flex flex-col gap-6">
-        <Navbar showBackButton backHref="/dashboard" title="Grades & Performance" />
+    <main className="min-h-screen bg-[#fbfbfb] flex flex-col items-center gap-6 lg:gap-8 px-4 md:px-16 py-6 lg:py-8">
+      <div className="w-full max-w-[1312px]">
+        <Navbar />
+      </div>
 
-        {/* CGPA Banner */}
-        <div className="bg-white border border-[#f2f4f7] rounded-3xl p-6 sm:p-8 shadow-xs flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex flex-col gap-2 text-center md:text-left">
-            <div className="inline-flex items-center gap-1.5 bg-[#ecfdf5] text-[#00b368] text-xs font-bold px-3 py-1 rounded-full self-center md:self-start">
-              <Award size={14} />
-              <span>First Class Standing</span>
+      <div className="w-full max-w-[1312px] flex flex-col gap-6 lg:gap-8">
+        <p className="text-xl lg:text-[28px] font-bold text-[#212121]">
+          Grades & Academic Performance
+        </p>
+
+        {/* CGPA Summary */}
+        {cgpaData && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-gradient-to-br from-[#006dff] to-[#0056cc] text-white rounded-2xl p-8">
+              <div className="flex items-center gap-2 mb-4">
+                <TrendingUp size={20} />
+                <p className="text-sm font-semibold opacity-90">Cumulative GPA</p>
+              </div>
+              <p className="text-4xl font-bold">{cgpaData.cgpa.toFixed(2)}</p>
+              <p className="text-sm opacity-75 mt-2">
+                Out of 4.0 scale
+              </p>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#1e293b] tracking-tight">
-              Academic Standing & CGPA Calculator
-            </h1>
-            <p className="text-xs text-[#64748b]">
-              Mechanical Engineering · 400 Level · Lagos State University
+
+            <div className="bg-white border border-[#f2f4f7] rounded-2xl p-8">
+              <p className="text-sm text-[#9f9f9f]">Current Semester GPA</p>
+              <p className="text-3xl font-bold text-[#212121] mt-2">
+                {semesterGPA.toFixed(2)}
+              </p>
+              <p className="text-xs text-[#9f9f9f] mt-2">
+                {semester === "first" ? "1st Semester" : "2nd Semester"} {session}
+              </p>
+            </div>
+
+            <div className="bg-white border border-[#f2f4f7] rounded-2xl p-8">
+              <p className="text-sm text-[#9f9f9f]">Total Credit Units</p>
+              <p className="text-3xl font-bold text-[#212121] mt-2">
+                {cgpaData.totalCreditUnits}
+              </p>
+              <p className="text-xs text-[#9f9f9f] mt-2">Completed</p>
+            </div>
+          </div>
+        )}
+
+        {/* Semester Breakdown */}
+        {cgpaData && cgpaData.semesterBreakdown.length > 0 && (
+          <div className="bg-white border border-[#f2f4f7] rounded-2xl p-6 lg:p-8">
+            <h3 className="font-bold text-lg text-[#212121] mb-6 flex items-center gap-2">
+              <Award size={20} /> Semester Breakdown
+            </h3>
+            <div className="space-y-4">
+              {cgpaData.semesterBreakdown.map(sem => (
+                <div
+                  key={sem.semester}
+                  className="flex items-center justify-between p-4 bg-[#fcfdfd] rounded-xl border border-[#f2f4f7]"
+                >
+                  <div>
+                    <p className="font-semibold text-[#212121]">
+                      {sem.semester}
+                    </p>
+                    <p className="text-sm text-[#9f9f9f]">
+                      {sem.creditUnits} credit units
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-2xl font-bold text-[#006dff]">
+                      {sem.gpa.toFixed(2)}
+                    </p>
+                    <p className="text-xs text-[#9f9f9f]">GPA</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Courses & Grades */}
+        {isLoading ? (
+          <div className="bg-white rounded-2xl border border-[#f2f4f7] py-20 flex items-center justify-center">
+            <p className="text-[#9f9f9f]">Loading grades...</p>
+          </div>
+        ) : error ? (
+          <div className="bg-white rounded-2xl border border-[#f2f4f7] py-20 flex items-center justify-center">
+            <p className="text-[#ff3b3b]">{error}</p>
+          </div>
+        ) : grades.length === 0 ? (
+          <div className="bg-white rounded-2xl border border-[#f2f4f7] py-20 flex flex-col items-center gap-4">
+            <p className="text-lg text-[#212121]">No grades yet</p>
+            <p className="text-sm text-[#9f9f9f]">
+              Your grades will appear here once they are released.
             </p>
           </div>
-
-          <div className="flex items-center gap-4 p-4 bg-[#f8fafc] border border-[#e2e8f0] rounded-2xl">
-            <div className="text-center px-4 border-r border-[#e2e8f0]">
-              <span className="text-[10px] font-bold text-[#64748b] uppercase">Current GPA</span>
-              <span className="text-3xl font-black text-[#006dff] block">{gpa}</span>
-            </div>
-            <div className="text-center px-4">
-              <span className="text-[10px] font-bold text-[#64748b] uppercase">Cumulative CGPA</span>
-              <span className="text-3xl font-black text-[#00b368] block">4.68</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Semester Transcript */}
-        <div className="bg-white border border-[#f2f4f7] rounded-3xl p-6 sm:p-8 shadow-xs flex flex-col gap-5">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="font-bold text-lg text-[#1e293b]">300 Level — Second Semester Results</h2>
-              <p className="text-xs text-[#64748b]">Total Units Registered: {totalUnits}</p>
-            </div>
-          </div>
-
-          <div className="border border-[#f2f4f7] rounded-2xl overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs">
-              <thead>
-                <tr className="bg-[#f8fafc] border-b border-[#f2f4f7] font-bold text-[#64748b] uppercase">
-                  <th className="py-3 px-4">Course Code</th>
-                  <th className="py-3 px-4">Course Description</th>
-                  <th className="py-3 px-4 text-center">Credit Units</th>
-                  <th className="py-3 px-4 text-center">Score</th>
-                  <th className="py-3 px-4 text-center">Grade</th>
-                  <th className="py-3 px-4 text-right">Grade Point</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#f2f4f7]">
-                {semesterResults.map((row) => (
-                  <tr key={row.code} className="hover:bg-[#f8fafc]">
-                    <td className="py-3.5 px-4 font-bold text-[#006dff]">{row.code}</td>
-                    <td className="py-3.5 px-4 font-semibold text-[#1e293b]">{row.title}</td>
-                    <td className="py-3.5 px-4 text-center text-[#64748b]">{row.units}</td>
-                    <td className="py-3.5 px-4 text-center font-bold text-[#1e293b]">{row.score}%</td>
-                    <td className="py-3.5 px-4 text-center">
-                      <span className="size-7 rounded-lg bg-[#eff6ff] text-[#006dff] font-black inline-flex items-center justify-center">
-                        {row.grade}
-                      </span>
-                    </td>
-                    <td className="py-3.5 px-4 text-right font-black text-[#1e293b]">
-                      {(row.units * row.gp).toFixed(1)}
-                    </td>
+        ) : (
+          <div className="bg-white border border-[#f2f4f7] rounded-2xl overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[600px]">
+                <thead>
+                  <tr className="bg-[#fcfdfd] border-b border-[#f2f4f7]">
+                    <th className="px-6 py-4 text-left text-sm font-bold text-[#212121]">
+                      Course
+                    </th>
+                    <th className="px-6 py-4 text-left text-sm font-bold text-[#212121]">
+                      Course Code
+                    </th>
+                    <th className="px-6 py-4 text-center text-sm font-bold text-[#212121]">
+                      Credits
+                    </th>
+                    <th className="px-6 py-4 text-center text-sm font-bold text-[#212121]">
+                      Grade
+                    </th>
+                    <th className="px-6 py-4 text-center text-sm font-bold text-[#212121]">
+                      Points
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {grades.map((grade, idx) => (
+                    <tr
+                      key={grade._id}
+                      className={`border-b border-[#f2f4f7] last:border-b-0 ${
+                        idx % 2 === 0 ? "bg-white" : "bg-[#fcfdfd]"
+                      }`}
+                    >
+                      <td className="px-6 py-4">
+                        <p className="font-medium text-[#212121]">
+                          {grade.course}
+                        </p>
+                      </td>
+                      <td className="px-6 py-4">
+                        <p className="text-sm text-[#9f9f9f]">
+                          {grade.courseCode}
+                        </p>
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <p className="text-sm text-[#212121]">
+                          {grade.creditUnits}
+                        </p>
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <span
+                          className={`inline-block px-4 py-1 rounded-full text-sm font-bold ${
+                            gradeColorMap[grade.grade] ||
+                            gradeColorMap.F
+                          }`}
+                        >
+                          {grade.grade}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <p className="text-sm font-semibold text-[#212121]">
+                          {grade.gradePoints.toFixed(2)}
+                        </p>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Summary Row */}
+            <div className="bg-[#fcfdfd] border-t border-[#f2f4f7] px-6 py-4">
+              <div className="flex items-center justify-between">
+                <p className="font-bold text-[#212121]">Total</p>
+                <div className="flex items-center gap-8">
+                  <div className="text-right">
+                    <p className="text-xs text-[#9f9f9f]">Credit Units</p>
+                    <p className="font-bold text-[#212121]">
+                      {grades.reduce((sum, g) => sum + g.creditUnits, 0)}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs text-[#9f9f9f]">Total Points</p>
+                    <p className="font-bold text-[#212121]">
+                      {grades
+                        .reduce((sum, g) => sum + g.gradePoints, 0)
+                        .toFixed(2)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
+        )}
+
+        {/* Session Info */}
+        <div className="bg-blue-50 border border-[#d1e9ff] rounded-2xl px-6 py-4">
+          <p className="text-sm text-[#006dff]">
+            Showing grades for <strong>{session}</strong> -{" "}
+            <strong>
+              {semester === "first" ? "1st Semester" : "2nd Semester"}
+            </strong>
+          </p>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

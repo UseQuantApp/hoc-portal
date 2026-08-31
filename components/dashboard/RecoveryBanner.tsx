@@ -1,47 +1,40 @@
-'use client';
+"use client";
 
-import React from 'react';
-import Link from 'next/link';
-import { ShieldAlert, ArrowRight } from 'lucide-react';
+import { useState } from "react";
+import { AlertCircle, X } from "lucide-react";
+import Link from "next/link";
 
-interface RecoveryBannerProps {
-  onDismiss?: () => void;
-}
+type RecoveryBannerProps = {
+  status?: "no-email" | "unverified";
+};
 
-export default function RecoveryBanner({ onDismiss }: RecoveryBannerProps) {
+export default function RecoveryBanner({ status = "no-email" }: RecoveryBannerProps) {
+  const [visible, setVisible] = useState(true);
+  if (!visible) return null;
+
+  const message =
+    status === "no-email"
+      ? "Add recovery email to secure your account"
+      : "Verify recovery email to secure your account";
+
+  const buttonLabel = status === "no-email" ? "Add email" : "Verify Email";
+
   return (
-    <div className="w-full bg-gradient-to-r from-[#fff7ed] to-[#ffedd5] border border-[#fed7aa] rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-2xs">
-      <div className="flex items-center gap-3">
-        <div className="size-10 rounded-xl bg-[#ea580c] text-white flex items-center justify-center shrink-0">
-          <ShieldAlert size={20} />
-        </div>
-        <div className="flex flex-col">
-          <p className="font-bold text-xs sm:text-sm text-[#9a3412]">
-            Secure your academic uploads & scholar points
-          </p>
-          <p className="text-[11px] text-[#c2410c]">
-            Link a verified recovery email address to avoid losing your account and unlocked badges.
-          </p>
-        </div>
+    <div className="relative bg-white flex items-center gap-4 p-4 pl-6 rounded-lg overflow-hidden w-full">
+      <div className="absolute left-0 top-0 h-full w-1.5 bg-[#f60]" />
+      <div className="bg-[#ffebeb] rounded-full size-9 flex items-center justify-center shrink-0">
+        <AlertCircle className="text-[#ff4343]" size={20} />
       </div>
-
-      <div className="flex items-center gap-2 shrink-0">
-        <Link
-          href="/account/add-recovery-email"
-          className="bg-[#ea580c] hover:bg-[#c2410c] text-white text-xs font-bold px-4 py-2 rounded-xl flex items-center gap-1.5 shadow-2xs"
-        >
-          <span>Add Email</span>
-          <ArrowRight size={14} />
-        </Link>
-        {onDismiss && (
-          <button
-            onClick={onDismiss}
-            className="text-xs text-[#9a3412] hover:text-[#7c2d12] px-2 py-1 font-medium cursor-pointer"
-          >
-            Dismiss
-          </button>
-        )}
-      </div>
+      <p className="text-lg text-[#212121] flex-1">{message}</p>
+      <Link
+        href="/account/add-recovery-email"
+       className="bg-[#006dff] text-white text-sm px-4 py-2.5 rounded-md whitespace-nowrap"
+       >
+       {buttonLabel}
+      </Link>
+      <button onClick={() => setVisible(false)} className="text-[#ff4343]">
+        <X size={20} />
+      </button>
     </div>
   );
 }

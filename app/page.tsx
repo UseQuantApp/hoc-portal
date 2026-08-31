@@ -82,7 +82,7 @@ export default function SignInPage() {
                     placeholder="••••••••••"
                     className="w-full text-base text-[#212121] placeholder:text-[#21212180] outline-none bg-transparent"
                   />
-                  <button type="button" onClick={() => setShowPassword((v) => !v)} className="text-[#9f9f9f] shrink-0 cursor-pointer">
+                  <button type="button" onClick={() => setShowPassword((v) => !v)} className="text-[#9f9f9f] shrink-0">
                     {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
                 </div>
@@ -101,9 +101,9 @@ export default function SignInPage() {
               type="button"
               onClick={handleSignIn}
               disabled={isLoggingIn}
-              className="w-full bg-[#f60] disabled:opacity-50 text-white text-base lg:text-lg font-bold lowercase py-3 rounded-xl hover:bg-[#e55600] transition-colors cursor-pointer"
+              className="w-full bg-[#f60] disabled:opacity-50 text-white text-base lg:text-lg font-bold lowercase py-3 rounded-xl hover:bg-[#e55600] transition-colors"
             >
-              {isLoggingIn ? "signing in..." : "Sign In"}
+              {isLoggingIn ? "signing in..." : "sign in"}
             </button>
 
             <p className="text-sm lg:text-base text-center text-[#21212180]">
