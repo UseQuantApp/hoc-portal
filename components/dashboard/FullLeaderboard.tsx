@@ -1,61 +1,130 @@
-"use client";
+'use client';
 
-import Image from "next/image";
-import type { Leader } from "@/components/dashboard/LeaderboardCard";
+import React, { useState } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+import { placeholderLeaderboard } from '@/lib/dashboard-data';
+import { ArrowLeft } from 'lucide-react';
 
-const medalIcon: Record<string, string> = {
-  "medal-1": "/images/medal-gold.svg",
-  "medal-2": "/images/medal-silver.svg",
-  "medal-3": "/images/medal-bronze.svg",
-};
+export default function FullLeaderboard() {
+  const [department, setDepartment] = useState('All Departments');
+  const [level, setLevel] = useState('All Levels');
 
-export default function FullLeaderboard({ leaders }: { leaders: Leader[] }) {
   return (
-    <div className="border border-[#ececec] bg-[#fbfbfb] rounded-2xl flex flex-col gap-2 lg:gap-4 p-2 lg:p-4">
-      {leaders.map((leader) => (
-        <div
-          key={leader.name}
-          className={`rounded-3xl flex items-center justify-between px-3 lg:px-4 py-2 lg:py-2.5 gap-2 ${
-            leader.isYou ? "bg-[#edf5ff] border border-[#b2d3ff]" : "bg-white"
-          }`}
-        >
-          <div className="flex items-center gap-2 lg:gap-6 min-w-0">
-            {typeof leader.rank === "string" ? (
-              <Image src={medalIcon[leader.rank]} alt="" width={20} height={20} className="lg:w-[34px] lg:h-[34px] shrink-0" />
-            ) : (
-              <p className="font-bold text-lg lg:text-2xl text-[#f60] shrink-0 w-6 lg:w-10">#{leader.rank}</p>
-            )}
-            <div className="flex items-center gap-2 lg:gap-4 min-w-0">
-              <div className="relative size-[44px] lg:size-[86px] rounded-full overflow-hidden bg-[#d9d9d9] shrink-0">
-                <Image src={leader.avatar} alt={leader.name} fill className="object-cover" />
-              </div>
-              <div className="flex flex-col gap-1 lg:gap-2 min-w-0">
-                <p
-                  className={`font-bold text-sm lg:text-xl tracking-tight truncate ${
-                    leader.isYou ? "text-[#006dff]" : "text-[#212121]"
+    <div className="bg-white border border-[#f2f4f7] rounded-2xl lg:rounded-3xl p-6 shadow-xs flex flex-col gap-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#f2f4f7] pb-4">
+        <div className="flex items-center gap-3">
+          <Link
+            href="/dashboard"
+            className="size-9 rounded-xl bg-[#fbfbfb] border border-[#f2f4f7] hover:bg-[#f4f4f4] flex items-center justify-center text-[#212121] transition-colors"
+          >
+            <ArrowLeft size={18} />
+          </Link>
+          <div>
+            <h2 className="font-bold text-xl text-[#212121]">Campus Leaderboard Hall of Fame</h2>
+            <p className="text-xs text-[#21212180]">Recognizing outstanding peer study note contributors</p>
+          </div>
+        </div>
+
+        {/* Filters */}
+        <div className="flex items-center gap-2">
+          <select
+            value={department}
+            onChange={(e) => setDepartment(e.target.value)}
+            className="bg-[#fbfbfb] border border-[#f4f4f4] rounded-xl px-3 py-2 text-xs font-bold text-[#212121] outline-none cursor-pointer"
+          >
+            <option>All Departments</option>
+            <option>Mechanical Engineering</option>
+            <option>Electrical Engineering</option>
+            <option>Computer Science</option>
+          </select>
+
+          <select
+            value={level}
+            onChange={(e) => setLevel(e.target.value)}
+            className="bg-[#fbfbfb] border border-[#f4f4f4] rounded-xl px-3 py-2 text-xs font-bold text-[#212121] outline-none cursor-pointer"
+          >
+            <option>All Levels</option>
+            <option>100 Level</option>
+            <option>200 Level</option>
+            <option>300 Level</option>
+            <option>400 Level</option>
+            <option>500 Level</option>
+          </select>
+        </div>
+      </div>
+
+      <div className="border border-[#f2f4f7] rounded-xl overflow-hidden">
+        <table className="w-full text-left border-collapse text-xs">
+          <thead>
+            <tr className="bg-[#fbfbfb] border-b border-[#f2f4f7] font-bold text-[#21212180] uppercase tracking-wider">
+              <th className="py-3.5 px-4 w-14 text-center">Rank</th>
+              <th className="py-3.5 px-4">Scholar Name</th>
+              <th className="py-3.5 px-4">Department & Level</th>
+              <th className="py-3.5 px-4 text-center">Materials</th>
+              <th className="py-3.5 px-4 text-right">Points Earned</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-[#f2f4f7]">
+            {placeholderLeaderboard.map((entry, idx) => {
+              const rank = entry.rank || idx + 1;
+              const medalSrc =
+                rank === 1
+                  ? '/images/medal-gold.svg'
+                  : rank === 2
+                  ? '/images/medal-silver.svg'
+                  : rank === 3
+                  ? '/images/medal-bronze.svg'
+                  : null;
+
+              return (
+                <tr
+                  key={idx}
+                  className={`hover:bg-[#fbfbfb] transition-colors ${
+                    entry.isYou ? 'bg-[#eff7ff]/70 font-semibold' : ''
                   }`}
                 >
-                  {leader.name}
-                </p>
-                <div className="flex items-center gap-2 lg:gap-4">
-                  <p className="text-xs lg:text-lg text-[#6d6d6d]">{leader.tier}</p>
-                  <div className="hidden lg:flex items-center gap-1">
-                    <Image src="/images/points-icon.png" alt="" width={17} height={17} className="opacity-70" />
-                    <p className="text-lg text-[#6d6d6d]">{leader.materials} materials</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <p
-            className={`font-bold text-sm lg:text-xl shrink-0 ${
-              leader.isYou ? "text-[#006dff]" : "text-[#212121]"
-            }`}
-          >
-            {leader.points} pts
-          </p>
-        </div>
-      ))}
+                  <td className="py-3 px-4 text-center">
+                    {medalSrc ? (
+                      <div className="relative size-6 mx-auto">
+                        <Image
+                          src={medalSrc}
+                          alt={`Rank ${rank}`}
+                          fill
+                          className="object-contain"
+                        />
+                      </div>
+                    ) : (
+                      <span className="font-bold text-[#21212180]">#{rank}</span>
+                    )}
+                  </td>
+                  <td className="py-3 px-4">
+                    <div className="flex items-center gap-2">
+                      <div className="relative size-7 rounded-full overflow-hidden bg-[#e5e5e5] shrink-0 border border-[#f2f4f7]">
+                        <Image
+                          src={entry.avatar || '/images/avatar-user.png'}
+                          alt={entry.name}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                      <span className="font-bold text-[#212121]">{entry.name}</span>
+                      {entry.isYou && (
+                        <span className="bg-[#006dff] text-white text-[9px] font-bold px-1.5 py-0.2 rounded-md">
+                          YOU
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="py-3 px-4 text-[#21212180]">Mechanical Engineering · 400L</td>
+                  <td className="py-3 px-4 text-center font-bold text-[#212121]">{entry.materials}</td>
+                  <td className="py-3 px-4 text-right font-bold text-[#006dff]">{entry.points} pts</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

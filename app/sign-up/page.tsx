@@ -138,7 +138,7 @@ export default function SignUpPage() {
                 type="button"
                 onClick={() => setStep(2)}
                 disabled={!fullName || !email}
-                className="w-full bg-[#f60] disabled:opacity-50 text-white text-base lg:text-lg font-bold lowercase py-3 rounded-xl hover:bg-[#e55600] transition-colors"
+                className="w-full bg-[#f60] disabled:opacity-50 text-white text-base lg:text-lg font-bold lowercase py-3 rounded-xl hover:bg-[#e55600] transition-colors cursor-pointer"
               >
                 next
               </button>
@@ -180,7 +180,7 @@ export default function SignUpPage() {
                 type="button"
                 onClick={() => setStep(3)}
                 disabled={!matricNumber || !faculty || !department}
-                className="w-full bg-[#f60] disabled:opacity-50 text-white text-base lg:text-lg font-bold py-3 rounded-xl hover:bg-[#e55600] transition-colors"
+                className="w-full bg-[#f60] disabled:opacity-50 text-white text-base lg:text-lg font-bold py-3 rounded-xl hover:bg-[#e55600] transition-colors cursor-pointer"
               >
                 Next
               </button>
@@ -226,7 +226,7 @@ export default function SignUpPage() {
                       placeholder="••••••••••"
                       className="w-full text-base text-[#212121] placeholder:text-[#21212180] outline-none bg-transparent"
                     />
-                    <button type="button" onClick={() => setShowPassword((v) => !v)} className="text-[#9f9f9f] shrink-0">
+                    <button type="button" onClick={() => setShowPassword((v) => !v)} className="text-[#9f9f9f] shrink-0 cursor-pointer">
                       {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                     </button>
                   </div>
@@ -245,7 +245,7 @@ export default function SignUpPage() {
                       placeholder="••••••••••"
                       className="w-full text-base text-[#212121] placeholder:text-[#21212180] outline-none bg-transparent"
                     />
-                    <button type="button" onClick={() => setShowConfirmPassword((v) => !v)} className="text-[#9f9f9f] shrink-0">
+                    <button type="button" onClick={() => setShowConfirmPassword((v) => !v)} className="text-[#9f9f9f] shrink-0 cursor-pointer">
                       {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                     </button>
                   </div>
@@ -260,9 +260,9 @@ export default function SignUpPage() {
                 type="button"
                 onClick={handleCreateAccount}
                 disabled={isSubmitting}
-                className="w-full bg-[#f60] disabled:opacity-50 text-white text-base lg:text-lg font-bold lowercase py-3 rounded-xl hover:bg-[#e55600] transition-colors"
+                className="w-full bg-[#f60] disabled:opacity-50 text-white text-base lg:text-lg font-bold lowercase py-3 rounded-xl hover:bg-[#e55600] transition-colors cursor-pointer"
               >
-                {isSubmitting ? "creating account..." : "create account"}
+                {isSubmitting ? "creating account..." : "Create Account"}
               </button>
 
               <p className="text-sm lg:text-base text-center text-[#21212180]">

@@ -1,129 +1,136 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import Image from "next/image";
-import { ArrowRight, X } from "lucide-react";
-import FullLeaderboard from "@/components/dashboard/FullLeaderboard";
+import React from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+import { placeholderLeaderboard } from '@/lib/dashboard-data';
+import { Trophy, ArrowRight } from 'lucide-react';
 
-export type Leader = {
+export interface Leader {
   name: string;
   tier: string;
   materials: number;
   points: string;
-  medal: string | null;
+  medal?: string | null;
   rank?: number;
-  avatar: string;
-  isYou: boolean;
-};
+  avatar?: string;
+  isYou?: boolean;
+}
 
-export default function LeaderboardCard({ leaders = [], me }: { leaders?: Leader[]; me?: { rank: number; points: number } | null }) {
-  const [showModal, setShowModal] = useState(false);
-  const hasYouRanked = leaders.some((l) => l.isYou);
-  const displayLeaders = me && !hasYouRanked
-    ? [...leaders, { name: "You", tier: `#${me.rank}`, materials: 0, points: me.points.toLocaleString(), medal: null, rank: me.rank, avatar: "/images/avatar-user.png", isYou: true }]
-    : leaders;
+interface LeaderboardCardProps {
+  leaders?: Leader[];
+  me?: { rank: number; points: number } | null;
+  showFullLink?: boolean;
+}
+
+export default function LeaderboardCard({
+  leaders = placeholderLeaderboard,
+  me,
+  showFullLink = true,
+}: LeaderboardCardProps) {
+  const displayLeaders = leaders.length > 0 ? leaders : placeholderLeaderboard;
 
   return (
-    <div className="flex flex-col gap-4 lg:gap-8 flex-1">
+    <div className="bg-white border border-[#f2f4f7] rounded-2xl lg:rounded-3xl p-6 shadow-xs flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <p className="text-lg lg:text-[28px] font-bold text-[#212121]">Top Contributors Leaderboard</p>
-        <button
-          onClick={() => setShowModal(true)}
-          className="bg-[#fcfdfd] border border-[#e5e5e5] text-[#212121] text-xs lg:text-base flex items-center gap-1.5 lg:gap-2 px-3 lg:px-4 py-2 lg:py-3.5 rounded-lg shrink-0"
-        >
-          View all <ArrowRight size={14} />
-        </button>
-      </div>
+        <div className="flex items-center gap-2.5">
+          <div className="size-9 rounded-xl bg-[#eff7ff] text-[#006dff] flex items-center justify-center">
+            <Trophy size={18} />
+          </div>
+          <div>
+            <h3 className="font-bold text-base text-[#212121]">Campus Leaderboard</h3>
+            <p className="text-xs text-[#21212180]">Top academic contributors</p>
+          </div>
+        </div>
 
-      <div className="border border-[#ececec] bg-[#fbfbfb] rounded-2xl flex flex-col gap-2 lg:gap-4 p-2 lg:p-4">
-        {displayLeaders.map((leader) => (
-          <div
-            key={leader.name}
-            className={`rounded-3xl flex items-center justify-between px-3 lg:px-4 py-2 lg:py-2.5 gap-2 ${
-              leader.isYou ? "bg-[#edf5ff] border border-[#b2d3ff]" : "bg-white"
-            }`}
+        {showFullLink && (
+          <Link
+            href="/dashboard?view=leaderboard"
+            className="text-xs font-bold text-[#006dff] hover:underline flex items-center gap-1"
           >
-<div className="flex items-center gap-2 lg:gap-6 min-w-0">
-  {/* rank/medal — desktop only, sits on the left */}
-  {leader.medal ? (
-    <Image src={leader.medal} alt="" width={20} height={20} className="hidden lg:block lg:w-[34px] lg:h-[34px] shrink-0" />
-  ) : leader.rank ? (
-    <p className="hidden lg:block font-bold text-2xl text-[#f60] shrink-0 w-10">#{leader.rank}</p>
-  ) : (
-    <span className="hidden lg:block w-[34px] text-center text-[#9f9f9f] shrink-0">–</span>
-  )}
-  <div className="flex items-center gap-2 lg:gap-4 min-w-0">
-    <div className="relative size-[44px] lg:size-[86px] rounded-full overflow-hidden bg-[#d9d9d9] shrink-0">
-      <Image src={leader.avatar} alt={leader.name} fill className="object-cover" />
-    </div>
-    <div className="flex flex-col gap-1 lg:gap-2 min-w-0">
-      <p
-       className={`font-bold text-sm lg:text-xl tracking-tight truncate ${
-     leader.isYou ? "text-[#006dff]" : "text-[#212121]"
-      }`}
-      >
-        {leader.name}
-      </p>
-      <div className="flex items-center gap-2 lg:gap-4">
-        <p className="text-xs lg:text-lg text-[#6d6d6d]">{leader.tier}</p>
-        <div className="flex items-center gap-1">
-          <Image src="/images/points-icon.png" alt="" width={13} height={13} className="opacity-70 lg:hidden" />
-          <p className="text-xs lg:hidden text-[#6d6d6d]">{leader.materials} materials</p>
-          <div className="hidden lg:flex items-center gap-1">
-            <Image src="/images/points-icon.png" alt="" width={17} height={17} className="opacity-70" />
-            <p className="text-lg text-[#6d6d6d]">{leader.materials} materials</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-{/* mobile: medal/rank stacked above points, on the right */}
-<div className="flex flex-col items-end gap-1 shrink-0">
-  {leader.medal ? (
-    <Image src={leader.medal} alt="" width={17} height={17} className="lg:hidden" />
-  ) : leader.rank ? (
-    <p className="lg:hidden font-bold text-xs text-[#f60]">#{leader.rank}</p>
-  ) : null}
-  <p
-   className={`font-bold text-sm lg:text-xl tracking-tight truncate ${
-  leader.isYou ? "text-[#006dff]" : "text-[#212121]"
-    }`}
-  >
-    {leader.points} pts
-       </p>
-        </div>
-          </div>
-        ))}
-
-        {!hasYouRanked && (
-          <div className="bg-[#fff8f4] border-t-2 border-dashed border-[#ffd0aa] flex items-center gap-2 lg:gap-4 px-3 lg:px-6 py-3 lg:py-4">
-            <span className="w-5 lg:w-8 text-center text-[#9f9f9f] text-xs lg:text-sm shrink-0">–</span>
-            <div className="flex-1 flex flex-col gap-1.5 lg:gap-3.5 min-w-0">
-              <p className="font-bold text-sm lg:text-xl text-[#212121]">Akorede (you)</p>
-              <p className="text-xs lg:text-sm text-[#9f9f9f] truncate">Upload your first material to claim your spot</p>
-            </div>
-            <p className="text-xs lg:text-sm text-[#9f9f9f] shrink-0">No rank yet</p>
-          </div>
+            <span>Full Board</span>
+            <ArrowRight size={13} />
+          </Link>
         )}
       </div>
 
-      {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50" onClick={() => setShowModal(false)}>
-          <div className="bg-white rounded-2xl w-full max-w-[700px] max-h-[85vh] overflow-y-auto p-4 lg:p-6"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between mb-4 lg:mb-6">
-              <p className="text-lg lg:text-2xl font-bold text-[#212121]">Top Contributors Leaderboard</p>
-              <button onClick={() => setShowModal(false)} className="text-[#9f9f9f]">
-                <X size={24} />
-              </button>
+      <div className="divide-y divide-[#f2f4f7] flex flex-col">
+        {displayLeaders.slice(0, 5).map((entry, index) => {
+          const rank = entry.rank || index + 1;
+          const medalSrc =
+            rank === 1
+              ? '/images/medal-gold.svg'
+              : rank === 2
+              ? '/images/medal-silver.svg'
+              : rank === 3
+              ? '/images/medal-bronze.svg'
+              : null;
+
+          return (
+            <div
+              key={index}
+              className={`py-3 flex items-center justify-between gap-3 ${
+                entry.isYou ? 'bg-[#eff7ff]/60 -mx-3 px-3 rounded-xl' : ''
+              }`}
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                {/* Rank / Medal */}
+                <div className="size-7 rounded-lg flex items-center justify-center shrink-0 font-bold text-xs">
+                  {medalSrc ? (
+                    <div className="relative size-6 shrink-0">
+                      <Image
+                        src={medalSrc}
+                        alt={`Rank ${rank}`}
+                        fill
+                        className="object-contain"
+                      />
+                    </div>
+                  ) : (
+                    <span className="text-[#21212180] font-bold">#{rank}</span>
+                  )}
+                </div>
+
+                {/* Avatar */}
+                <div className="relative size-8 rounded-full overflow-hidden bg-[#e5e5e5] shrink-0 border border-[#f2f4f7]">
+                  <Image
+                    src={entry.avatar || '/images/avatar-user.png'}
+                    alt={entry.name}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+
+                <div className="flex flex-col min-w-0">
+                  <div className="flex items-center gap-1.5 truncate">
+                    <span
+                      className={`text-xs font-bold truncate ${
+                        entry.isYou ? 'text-[#006dff]' : 'text-[#212121]'
+                      }`}
+                    >
+                      {entry.name}
+                    </span>
+                    {entry.isYou && (
+                      <span className="bg-[#006dff] text-white text-[9px] font-bold px-1.5 py-0.2 rounded-md">
+                        YOU
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-[11px] text-[#21212180]">
+                    {entry.tier} · {entry.materials} materials
+                  </span>
+                </div>
+              </div>
+
+              <div className="text-right shrink-0">
+                <span className="font-bold text-xs text-[#006dff]">
+                  {entry.points}
+                </span>
+                <span className="text-[10px] text-[#21212180] block">pts</span>
+              </div>
             </div>
-            <FullLeaderboard leaders={displayLeaders} />
-          </div>
-        </div>
-      )}
+          );
+        })}
+      </div>
     </div>
   );
 }

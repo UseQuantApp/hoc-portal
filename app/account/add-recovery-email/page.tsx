@@ -1,53 +1,85 @@
-import Image from "next/image";
-import Header from "@/components/Header";
-import Link from "next/link";
+'use client';
+
+import React, { useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import Header from '@/components/Header';
+import StepIndicator from '@/components/StepIndicator';
+import { Mail, ArrowRight, ShieldCheck } from 'lucide-react';
 
 export default function AddRecoveryEmailPage() {
+  const router = useRouter();
+  const [email, setEmail] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) return;
+    setIsLoading(true);
+    setTimeout(() => {
+      setIsLoading(false);
+      // store in sessionStorage for the verification flow
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('pending_recovery_email', email);
+      }
+      router.push('/account/verify-recovery-email');
+    }, 400);
+  };
+
   return (
-    <main className="min-h-screen bg-[#fbfbfb] flex flex-col items-center">
-      <div className="w-full max-w-[1100px]">
-        <Header />
-      </div>
+    <div className="min-h-screen bg-[#fbfbfb] text-[#212121] flex flex-col justify-between items-center">
+      <Header showBack backHref="/account" title="Account Security" subtitle="Step 1 of 2" />
 
-      <div className="w-full max-w-[500px] flex flex-col items-center gap-8 lg:gap-10 px-6 py-10 lg:py-16">
-        <div className="relative w-16 h-16">
-          <Image src="/images/recovery-mail-icon.svg" alt="" fill className="object-contain" />
-          <div className="absolute -top-2 -right-2 w-6 h-6">
-            <Image src="/images/recovery-badge-icon.svg" alt="" fill className="object-contain" />
-          </div>
-        </div>
+      <main className="w-full max-w-md my-8 px-4">
+        <div className="bg-white border border-[#f2f4f7] rounded-3xl p-6 sm:p-8 shadow-xs flex flex-col gap-6">
+          <StepIndicator steps={['Add Email', 'Verify OTP', 'Completed']} currentStep={0} />
 
-        <div className="flex flex-col items-center gap-3 lg:gap-4 text-center">
-          <h1 className="text-lg lg:text-2xl font-bold text-[#212121]">Add Recovery Email</h1>
-          <p className="text-sm lg:text-base text-[#212121] max-w-[380px]">
-            Add a backup email to keep your account secure and recover it easily.
-          </p>
-        </div>
-
-        <form className="flex flex-col gap-6 w-full">
-          <div className="flex flex-col gap-3">
-            <label htmlFor="recovery-email" className="text-sm lg:text-base text-[#212121]">
-              Recovery email (optional)
-            </label>
-            <div className="flex items-center gap-2.5 bg-white border-[1.5px] border-[#f4f4f4] rounded-xl p-4">
-              <Image src="/images/mail.svg" alt="" width={20} height={20} />
-              <input
-                id="recovery-email"
-                type="email"
-                placeholder="example@gmail.com"
-                className="w-full text-base lg:text-lg text-[#212121] placeholder:text-[#21212180] outline-none bg-transparent"
-              />
+          <div className="flex flex-col gap-1.5 text-center">
+            <div className="size-12 rounded-2xl bg-[#eff6ff] text-[#006dff] flex items-center justify-center mx-auto mb-1">
+              <ShieldCheck size={24} />
             </div>
+            <h1 className="text-2xl font-extrabold text-[#1e293b] tracking-tight">Add Recovery Email</h1>
+            <p className="text-xs text-[#64748b]">
+              Link a personal Gmail, Yahoo, or Outlook address to safeguard your academic uploads and points.
+            </p>
           </div>
 
-        <Link
-        href="/account/verify-recovery-email"
-       className="w-full bg-[#006dff] text-white text-base lg:text-lg lowercase py-3 rounded-xl hover:bg-[#005ce0] transition-colors text-center block"
-         >
-          send verification code (otp)
-       </Link>
-        </form>
-      </div>
-    </main>
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-bold text-[#475569]">Personal Email Address</label>
+              <div className="relative">
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#94a3b8]" size={16} />
+                <input
+                  type="email"
+                  required
+                  placeholder="e.g. personal.scholar@gmail.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full bg-[#f8fafc] border border-[#e2e8f0] focus:border-[#006dff] focus:bg-white rounded-xl pl-10 pr-3 py-2.5 text-xs text-[#1e293b] outline-none"
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full bg-[#f60] hover:bg-[#e55600] text-white font-bold text-xs sm:text-sm py-3 rounded-xl flex items-center justify-center gap-2 shadow-xs cursor-pointer mt-2"
+            >
+              {isLoading ? <span>Sending Code...</span> : <><span>Send Verification Code</span><ArrowRight size={16} /></>}
+            </button>
+          </form>
+
+          <div className="p-3 bg-[#f8fafc] rounded-2xl border border-[#e2e8f0] text-center">
+            <p className="text-[11px] text-[#64748b]">
+              A 6-digit confirmation code will be dispatched to this address immediately.
+            </p>
+          </div>
+        </div>
+      </main>
+
+      <footer className="text-center text-xs text-[#94a3b8] py-4">
+        © 2025 Quant Campus Academic System.
+      </footer>
+    </div>
   );
 }

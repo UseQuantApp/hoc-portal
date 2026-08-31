@@ -19,7 +19,10 @@
       }
     ],
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "next/link": ["./lib/next-compat/link"],
+      "next/navigation": ["./lib/next-compat/navigation"],
+      "next/image": ["./lib/next-compat/image"]
     }
   },
   "include": [

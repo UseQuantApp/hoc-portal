@@ -1,87 +1,141 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import Image from "next/image";
-import Header from "@/components/Header";
-import Link from "next/link";
-
-const RESEND_COOLDOWN = 54;
+import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import Header from '@/components/Header';
+import StepIndicator from '@/components/StepIndicator';
+import { KeyRound, ArrowRight, RefreshCw, AlertCircle } from 'lucide-react';
 
 export default function VerifyRecoveryEmailPage() {
-  const [secondsLeft, setSecondsLeft] = useState(RESEND_COOLDOWN);
+  const router = useRouter();
+  const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const [timer, setTimer] = useState(45);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+  const [targetEmail, setTargetEmail] = useState('your personal email');
 
   useEffect(() => {
-    if (secondsLeft <= 0) return;
-    const timer = setInterval(() => {
-      setSecondsLeft((prev) => Math.max(prev - 1, 0));
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [secondsLeft]);
+    if (typeof window !== 'undefined') {
+      const email = sessionStorage.getItem('pending_recovery_email');
+      if (email) setTargetEmail(email);
+    }
+    if (timer > 0) {
+      const interval = setInterval(() => setTimer((t) => t - 1), 1000);
+      return () => clearInterval(interval);
+    }
+  }, [timer]);
 
-  const canResend = secondsLeft === 0;
-  const formattedTime = `00:${secondsLeft.toString().padStart(2, "0")}`;
+  const handleOtpChange = (index: number, val: string) => {
+    if (val.length > 1) val = val[val.length - 1];
+    const newOtp = [...otp];
+    newOtp[index] = val;
+    setOtp(newOtp);
 
-  const handleResend = async () => {
-    if (!canResend) return;
-    // TODO: call resend recovery-email OTP API here
-    setSecondsLeft(RESEND_COOLDOWN);
+    if (val && index < 5) {
+      const nextInput = document.getElementById(`rec-otp-${index + 1}`);
+      nextInput?.focus();
+    }
+  };
+
+  const handleKeyDown = (index: number, e: React.KeyboardEvent) => {
+    if (e.key === 'Backspace' && !otp[index] && index > 0) {
+      const prevInput = document.getElementById(`rec-otp-${index - 1}`);
+      prevInput?.focus();
+    }
+  };
+
+  const handleVerify = (e: React.FormEvent) => {
+    e.preventDefault();
+    const code = otp.join('');
+    if (code.length < 6) {
+      setErrorMsg('Please input the complete 6-digit code.');
+      return;
+    }
+
+    // Fail simulation if code is 000000
+    if (code === '000000') {
+      router.push('/account/recovery-email-failed');
+      return;
+    }
+
+    setIsVerifying(true);
+    setTimeout(() => {
+      setIsVerifying(false);
+      router.push('/account/recovery-email-verified');
+    }, 500);
   };
 
   return (
-    <main className="min-h-screen bg-[#fbfbfb] flex flex-col items-center">
-      <div className="w-full max-w-[1100px]">
-        <Header />
-      </div>
+    <div className="min-h-screen bg-[#fbfbfb] text-[#212121] flex flex-col justify-between items-center">
+      <Header showBack backHref="/account/add-recovery-email" title="Account Security" subtitle="Step 2 of 2" />
 
-      <div className="w-full max-w-[420px] flex flex-col items-center gap-8 px-6 py-10 lg:py-16">
-        <div className="bg-[#f4f4f4] rounded-full size-16 flex items-center justify-center">
-          <Image src="/images/lock-icon.svg" alt="" width={24} height={24} />
-        </div>
+      <main className="w-full max-w-md my-8 px-4">
+        <div className="bg-white border border-[#f2f4f7] rounded-3xl p-6 sm:p-8 shadow-xs flex flex-col gap-6">
+          <StepIndicator steps={['Add Email', 'Verify OTP', 'Completed']} currentStep={1} />
 
-        <div className="flex flex-col items-center gap-2 text-center">
-          <h1 className="text-lg lg:text-xl font-bold text-[#212121]">Verify recovery Email</h1>
-          <p className="text-sm lg:text-base text-[#212121]">
-            We sent a 6-digit code to <span className="font-bold">ex********e@gmail.com</span>
-          </p>
-        </div>
+          <div className="flex flex-col gap-1.5 text-center">
+            <div className="size-12 rounded-2xl bg-[#eff6ff] text-[#006dff] flex items-center justify-center mx-auto mb-1">
+              <KeyRound size={24} />
+            </div>
+            <h1 className="text-2xl font-extrabold text-[#1e293b] tracking-tight">Enter 6-Digit PIN</h1>
+            <p className="text-xs text-[#64748b]">
+              Enter the security code delivered to <strong className="text-[#1e293b]">{targetEmail}</strong>
+            </p>
+          </div>
 
-        <div className="flex gap-2 lg:gap-2.5">
-          {["2", "", "", "", "", ""].map((val, i) => (
-            <input
-              key={i}
-              type="text"
-              inputMode="numeric"
-              maxLength={1}
-              defaultValue={val}
-              className="size-12 text-center text-xl rounded-md border border-[#e0e0e0] focus:border-[#006dff] focus:outline-none text-black"
-            />
-          ))}
-        </div>
+          {errorMsg && (
+            <div className="p-3 bg-[#fef2f2] border border-[#fecaca] rounded-2xl text-xs text-[#991b1b] text-center font-medium flex items-center justify-center gap-1.5">
+              <AlertCircle size={14} />
+              <span>{errorMsg}</span>
+            </div>
+          )}
 
-        <div className="flex flex-col items-center gap-3 w-full">
-          <Link
-         href="/account/recovery-email-verified"
-         className="w-full bg-[#006dff] text-white text-base py-3 rounded-xl hover:bg-[#005ce0] transition-colors text-center block"
-            > 
-        Verify &amp; Continue
-           </Link>
+          <form onSubmit={handleVerify} className="flex flex-col gap-6">
+            <div className="flex justify-center items-center gap-2 sm:gap-3">
+              {otp.map((digit, idx) => (
+                <input
+                  key={idx}
+                  id={`rec-otp-${idx}`}
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={1}
+                  value={digit}
+                  onChange={(e) => handleOtpChange(idx, e.target.value)}
+                  onKeyDown={(e) => handleKeyDown(idx, e)}
+                  className="size-11 sm:size-12 text-center text-lg font-black text-[#1e293b] bg-[#f8fafc] border border-[#e2e8f0] focus:border-[#006dff] focus:bg-white rounded-xl outline-none"
+                />
+              ))}
+            </div>
 
-          <p className="text-sm">
-            <span className="text-black/50">Didn&apos;t receive it? </span>
-            {canResend ? (
-              <button onClick={handleResend} className="font-bold text-[#006dff] hover:underline">
-                Resend
-              </button>
+            <button
+              type="submit"
+              disabled={isVerifying}
+              className="w-full bg-[#f60] hover:bg-[#e55600] text-white font-bold text-xs sm:text-sm py-3 rounded-xl flex items-center justify-center gap-2 shadow-xs cursor-pointer"
+            >
+              {isVerifying ? <span>Verifying OTP...</span> : <><span>Confirm & Link Email</span><ArrowRight size={16} /></>}
+            </button>
+          </form>
+
+          <div className="flex items-center justify-between text-xs text-[#64748b] pt-2 border-t border-[#f2f4f7]">
+            <span>Didn't receive code?</span>
+            {timer > 0 ? (
+              <span className="font-semibold text-[#94a3b8]">Resend in {timer}s</span>
             ) : (
-              <>
-                <span className="font-bold text-[#006dff]/50">Resend</span>
-                <span> in </span>
-                <span className="font-bold">{formattedTime}</span>
-              </>
+              <button
+                onClick={() => setTimer(45)}
+                className="font-bold text-[#006dff] hover:underline flex items-center gap-1 cursor-pointer"
+              >
+                <RefreshCw size={12} /> Resend PIN
+              </button>
             )}
-          </p>
+          </div>
         </div>
-      </div>
-    </main>
+      </main>
+
+      <footer className="text-center text-xs text-[#94a3b8] py-4">
+        © 2025 Quant Campus Academic System.
+      </footer>
+    </div>
   );
 }
