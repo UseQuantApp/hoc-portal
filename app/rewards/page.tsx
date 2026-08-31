@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Navbar from "@/components/dashboard/Navbar";
 import { apiFetch } from "@/lib/api";
+import { Check, LoaderCircle, X } from "lucide-react";
 
 type ModalState = "success" | "failed" | "processing" | null;
 
@@ -103,11 +104,13 @@ export default function RewardsPage() {
             </button>
 
             <div
-              className={`size-10 rounded-full flex items-center justify-center text-white text-lg ${
-                modal === "failed" ? "bg-[#ff3b3b]" : "bg-[#00b368]"
+              className={`size-10 rounded-full flex items-center justify-center text-white ${
+                modal === "failed" ? "bg-[#ff3b3b]" : modal === "success" ? "bg-[#00b368]" : "bg-[#f60]"
               }`}
             >
-              ✓
+              {modal === "success" && <Check size={20} />}
+              {modal === "failed" && <X size={20} />}
+              {modal === "processing" && <LoaderCircle size={20} className="animate-spin" />}
             </div>
 
             <div>

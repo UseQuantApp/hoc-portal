@@ -16,13 +16,7 @@ const badgeCategoryNames: Record<string, string> = {
   social_impact: "Social Impact",
 };
 
-const activityFeed = [
-  { id: 1, text: "You Earned +50 pts for uploading MEE 401 Notes", time: "2 hrs ago", unread: true },
-  { id: 2, text: "You Earned +50 pts for uploading MEE 401 Notes", time: "2 hrs ago", unread: true },
-  { id: 3, text: "You Earned +50 pts for uploading MEE 401 Notes", time: "2 hrs ago", unread: false },
-  { id: 4, text: "You Earned +50 pts for uploading MEE 401 Notes", time: "2 hrs ago", unread: false },
-  { id: 5, text: "You Earned +50 pts for uploading MEE 401 Notes", time: "2 hrs ago", unread: true },
-];
+const nextRewardGoal = 5500;
 
 export default function AccountPage() {
   const [activeTab, setActiveTab] = useState("Overview");
@@ -37,6 +31,12 @@ export default function AccountPage() {
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [saveStatus, setSaveStatus] = useState("");
   const [badges, setBadges] = useState<Array<{ id: string; name: string; description: string; category: string; points: number; earned: boolean }>>([]);
+  const [points, setPoints] = useState<number | null>(null);
+  const [tokens, setTokens] = useState<number | null>(null);
+  const [rank, setRank] = useState<number | null>(null);
+  const [isLoadingStats, setIsLoadingStats] = useState(true);
+  const [activity, setActivity] = useState<Array<{ description: string; createdAt: string }>>([]);
+  const [isLoadingActivity, setIsLoadingActivity] = useState(true);
 
   useEffect(() => {
     async function loadProfile() {
@@ -64,6 +64,47 @@ export default function AccountPage() {
       .then((res) => setBadges(res.data ?? res))
       .catch((err) => console.error("Failed to load badges:", err));
   }, []);
+
+  useEffect(() => {
+    async function loadStats() {
+      try {
+        const [pointsResponse, leaderboardResponse] = await Promise.all([
+          apiFetch("/points/mine"),
+          apiFetch("/leaderboard?limit=20"),
+        ]);
+        const pointsData = pointsResponse.data ?? pointsResponse;
+        const leaderboardData = leaderboardResponse.data ?? leaderboardResponse;
+        setPoints(pointsData.points ?? 0);
+        setTokens(pointsData.tokens ?? 0);
+        setRank(leaderboardData.me?.rank ?? null);
+      } catch (err) {
+        console.error("Failed to load account stats:", err);
+      } finally {
+        setIsLoadingStats(false);
+      }
+    }
+    loadStats();
+  }, []);
+
+  useEffect(() => {
+    async function loadActivity() {
+      try {
+        const response = await apiFetch("/points/mine/history");
+        setActivity(response.data ?? response);
+      } catch (err) {
+        console.error("Failed to load account activity:", err);
+      } finally {
+        setIsLoadingActivity(false);
+      }
+    }
+    loadActivity();
+  }, []);
+
+  const rewardProgress = points === null ? 0 : Math.min((points / nextRewardGoal) * 100, 100);
+  const pointsToNextReward = points === null ? nextRewardGoal : Math.max(nextRewardGoal - points, 0);
+  const earnedBadges = badges.filter((badge) => badge.earned);
+  const earnedBadgePoints = earnedBadges.reduce((total, badge) => total + badge.points, 0);
+  const badgeCompletion = badges.length === 0 ? 0 : Math.round((earnedBadges.length / badges.length) * 100);
 
   const handleSaveProfile = async () => {
     setSaveStatus("saving");
@@ -153,13 +194,13 @@ export default function AccountPage() {
                       <p className="text-xs text-[#9f9f9f] flex items-center gap-1">
                         <Coins size={14} /> Tokens
                       </p>
-                      <p className="font-bold text-lg text-[#212121]">4,500</p>
+                      <p className="font-bold text-lg text-[#212121]">{isLoadingStats ? "Loading..." : tokens?.toLocaleString()}</p>
                     </div>
                     <div>
                       <p className="text-xs text-[#9f9f9f] flex items-center gap-1">
                         <TrendingUp size={14} /> Rank
                       </p>
-                      <p className="font-bold text-lg text-[#212121]">12th</p>
+                      <p className="font-bold text-lg text-[#212121]">{isLoadingStats ? "Loading..." : rank === null ? "Unranked" : `${rank}${getOrdinalSuffix(rank)}`}</p>
                     </div>
                     <div>
                       <p className="text-xs text-[#9f9f9f]">Badge</p>
@@ -200,7 +241,7 @@ export default function AccountPage() {
                 <p className="font-bold text-lg text-[#212121]">Rewards &amp; Points</p>
                 <div className="bg-white border border-[#f2f4f7] rounded-2xl p-6 flex flex-col gap-4">
                   <p className="font-bold text-2xl text-[#212121]">
-                    4,500 <span className="text-base font-normal text-[#9f9f9f]">Quant points</span>
+                    {isLoadingStats ? "Loading..." : points?.toLocaleString()} <span className="text-base font-normal text-[#9f9f9f]">Quant points</span>
                   </p>
 
                   <div className="flex flex-col gap-1.5">
@@ -209,11 +250,11 @@ export default function AccountPage() {
                       <span className="text-[#9f9f9f]">Goal: 5,500 pts</span>
                     </div>
                     <div className="w-full h-2 bg-[#f2f4f7] rounded-full overflow-hidden">
-                      <div className="h-full bg-[#00b368] rounded-full" style={{ width: "75%" }} />
+                      <div className="h-full bg-[#00b368] rounded-full" style={{ width: `${rewardProgress}%` }} />
                     </div>
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-[#9f9f9f]">Keep uploading to unlock more rewards</span>
-                      <span className="text-[#9f9f9f]">1,000 pts to next reward · 75%</span>
+                      <span className="text-[#9f9f9f]">{isLoadingStats ? "Loading..." : `${pointsToNextReward.toLocaleString()} pts to next reward · ${Math.round(rewardProgress)}%`}</span>
                     </div>
                   </div>
 
@@ -235,15 +276,15 @@ export default function AccountPage() {
               <div className="bg-white border border-[#f2f4f7] rounded-2xl grid grid-cols-1 lg:grid-cols-3 divide-y lg:divide-y-0 lg:divide-x divide-[#f2f4f7]">
                 <div className="p-6">
                   <p className="text-sm text-[#9f9f9f]">Badges Earned</p>
-                  <p className="font-bold text-2xl text-[#212121]">4</p>
+                  <p className="font-bold text-2xl text-[#212121]">{earnedBadges.length}</p>
                 </div>
                 <div className="p-6">
                   <p className="text-sm text-[#9f9f9f]">Points from Badges</p>
-                  <p className="font-bold text-2xl text-[#f60]">700</p>
+                  <p className="font-bold text-2xl text-[#f60]">{earnedBadgePoints}</p>
                 </div>
                 <div className="p-6">
                   <p className="text-sm text-[#9f9f9f]">Completion</p>
-                  <p className="font-bold text-2xl text-[#212121]">33%</p>
+                  <p className="font-bold text-2xl text-[#212121]">{badgeCompletion}%</p>
                 </div>
               </div>
 
@@ -295,13 +336,16 @@ export default function AccountPage() {
 
           {activeTab === "Notifications & Activity" && (
             <div className="bg-white border border-[#f2f4f7] rounded-2xl overflow-hidden">
-              {activityFeed.map((item) => (
-                <div key={item.id} className="flex items-center justify-between gap-4 px-6 py-4 border-b border-[#f2f4f7] last:border-b-0">
+              {isLoadingActivity ? (
+                <p className="px-6 py-5 text-sm text-[#9f9f9f]">Loading activity...</p>
+              ) : activity.length === 0 ? (
+                <p className="px-6 py-5 text-sm text-[#9f9f9f]">No activity yet</p>
+              ) : activity.map((item, index) => (
+                <div key={`${item.createdAt}-${index}`} className="flex items-center justify-between gap-4 px-6 py-4 border-b border-[#f2f4f7] last:border-b-0">
                   <div>
-                    <p className="text-sm lg:text-base text-[#212121]">{item.text}</p>
-                    <p className="text-xs text-[#9f9f9f]">{item.time}</p>
+                    <p className="text-sm lg:text-base text-[#212121]">{item.description}</p>
+                    <p className="text-xs text-[#9f9f9f]">{new Date(item.createdAt).toLocaleDateString()}</p>
                   </div>
-                  {item.unread && <span className="size-2 rounded-full bg-[#006dff] shrink-0" />}
                 </div>
               ))}
             </div>
@@ -352,6 +396,14 @@ export default function AccountPage() {
       </div>
     </main>
   );
+}
+
+function getOrdinalSuffix(value: number) {
+  if (value % 100 >= 11 && value % 100 <= 13) return "th";
+  if (value % 10 === 1) return "st";
+  if (value % 10 === 2) return "nd";
+  if (value % 10 === 3) return "rd";
+  return "th";
 }
 
 function TextField({

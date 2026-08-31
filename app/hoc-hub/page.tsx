@@ -7,14 +7,18 @@ import { apiFetch } from "@/lib/api";
 
 const tabs = ["Lecturer Alerts", "Announcement", "Timetable"];
 
-const classes = [
-  { id: 1, day: "Mon", code: "MEE 401", name: "Thermodynamics 1", time: "8:00 - 10:00 AM" },
-  { id: 2, day: "Mon", code: "MEE 305", name: "Engineering Maths", time: "10:00 - 12:00 PM" },
-  { id: 3, day: "Tue", code: "MEE 305", name: "Engineering Maths", time: "10:00 - 12:00 PM" },
-  { id: 4, day: "Wed", code: "MEE 305", name: "Engineering Maths", time: "10:00 - 12:00 PM" },
-  { id: 5, day: "Thu", code: "MEE 305", name: "Engineering Maths", time: "10:00 - 12:00 PM" },
-  { id: 6, day: "Fri", code: "MEE 305", name: "Engineering Maths", time: "10:00 - 12:00 PM" },
-];
+type HocClass = {
+  id: string;
+  courseId: string;
+  timetableSlotId: string;
+  day: string;
+  code: string;
+  name: string;
+  time: string;
+};
+
+type Course = { _id: string; code: string; title: string };
+type TimetableSlot = { _id: string; courseId?: string; courseCode: string; courseTitle: string; day: string; startTime: string; endTime: string };
 
 const weeklySchedule = [
   { id: 1, day: "Mon", code: "MEE 401", course: "Thermodynamics I", time: "8:00 – 10:00 AM", venue: "LT2" },
@@ -32,7 +36,8 @@ const announcementTemplates = [
 
 export default function HocHubPage() {
   const [activeTab, setActiveTab] = useState("Lecturer Alerts");
-  const [selectedClass, setSelectedClass] = useState<number | null>(null);
+  const [classes, setClasses] = useState<HocClass[]>([]);
+  const [selectedClass, setSelectedClass] = useState<string | null>(null);
   const [alertMessage, setAlertMessage] = useState("");
   const [announcementTitle, setAnnouncementTitle] = useState("");
   const [announcementMessage, setAnnouncementMessage] = useState("");
@@ -40,8 +45,42 @@ export default function HocHubPage() {
   const [announcementHistory, setAnnouncementHistory] = useState<Array<{ id: string; title?: string; message: string; createdAt: string }>>([]);
   const [submitError, setSubmitError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingClasses, setIsLoadingClasses] = useState(true);
 
   const selected = classes.find((c) => c.id === selectedClass);
+
+  useEffect(() => {
+    async function loadClasses() {
+      try {
+        const [coursesResponse, timetableResponse] = await Promise.all([
+          apiFetch("/courses/mine?session=2024/2025&semester=first"),
+          apiFetch("/timetable/mine?session=2024/2025&semester=first"),
+        ]);
+        const courses = (coursesResponse.data ?? []) as Course[];
+        const timetable = (timetableResponse.data ?? []) as TimetableSlot[];
+        const coursesByCode = new Map(courses.map((course) => [course.code, course]));
+        setClasses(timetable.flatMap((slot) => {
+          const course = coursesByCode.get(slot.courseCode);
+          const courseId = typeof slot.courseId === "string" ? slot.courseId : course?._id;
+          if (!courseId) return [];
+          return [{
+            id: slot._id,
+            courseId: String(courseId),
+            timetableSlotId: slot._id,
+            day: slot.day,
+            code: slot.courseCode,
+            name: slot.courseTitle || course?.title || "",
+            time: `${slot.startTime} - ${slot.endTime}`,
+          }];
+        }));
+      } catch (err) {
+        setSubmitError(err instanceof Error ? err.message : "Failed to load classes.");
+      } finally {
+        setIsLoadingClasses(false);
+      }
+    }
+    loadClasses();
+  }, []);
 
   useEffect(() => {
     Promise.all([apiFetch("/announcements/mine?type=lecture_alert"), apiFetch("/announcements/mine?type=announcement")])
@@ -115,7 +154,11 @@ export default function HocHubPage() {
               <p className="font-bold text-lg text-[#212121]">Select a class to alert</p>
 
               <div className="bg-white border border-[#f2f4f7] rounded-2xl overflow-hidden">
-                {classes.map((c) => (
+                {isLoadingClasses ? (
+                  <p className="px-5 py-6 text-sm text-[#9f9f9f]">Loading classes...</p>
+                ) : classes.length === 0 ? (
+                  <p className="px-5 py-6 text-sm text-[#9f9f9f]">No classes available.</p>
+                ) : classes.map((c) => (
                   <button
                     key={c.id}
                     onClick={() => setSelectedClass(c.id)}
@@ -196,7 +239,7 @@ export default function HocHubPage() {
 
                   <button
                     disabled={!alertMessage || isSubmitting}
-                    onClick={() => submitAnnouncement({ type: "lecture_alert", courseId: selected.id, title: `${selected.code} Alert`, message: alertMessage })}
+                    onClick={() => submitAnnouncement({ type: "lecture_alert", courseId: String(selected.courseId), timetableSlotId: selected.timetableSlotId, title: `${selected.code} Alert`, message: alertMessage })}
                     className="w-full bg-[#f60] disabled:opacity-40 text-white text-sm font-bold py-3 rounded-xl"
                   >
                     Send Alert

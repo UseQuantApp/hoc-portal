@@ -35,7 +35,9 @@ useEffect(() => {
       <div className="flex flex-col lg:flex-row lg:items-center gap-1 lg:gap-8">
         <div className="flex items-center gap-2">
           <div className="relative w-6 h-6 lg:w-8 lg:h-8">
-            <Image src="/images/logo-icon.png" alt="Quant logo" fill className="object-contain" />
+            <Link href="/account" aria-label="Go to account page">
+              <Image src="/images/logo-icon.png" alt="Quant logo" fill className="object-contain" />
+            </Link>
           </div>
           <span className="text-xl lg:text-3xl font-medium text-[#212121]">Quant</span>
         </div>
@@ -74,13 +76,13 @@ useEffect(() => {
         </button>
         */}
         <div className="hidden lg:flex items-center gap-2.5">
-          <div className="relative size-12 rounded-lg border border-[#212121] overflow-hidden bg-[#d9d9d9]">
-            <Image src="/images/avatar-user.png" alt="Akorede" fill className="object-cover" />
-          </div>
+          <Link href="/account" aria-label="Go to account page" className="relative size-12 rounded-lg border border-[#212121] overflow-hidden bg-[#d9d9d9] block">
+            <Image src="/images/avatar-user.png" alt="Profile" fill className="object-cover" />
+          </Link>
           <div>
-         <p className="font-bold text-lg text-[#212121]">{fullName || "..."}</p>
-       <p className="text-sm text-[#212121]">Campus Scholar</p>
-     </div>
+            <p className="font-bold text-lg text-[#212121]">{fullName || "..."}</p>
+            <p className="text-sm text-[#212121]">Campus Scholar</p>
+          </div>
         </div>
       </div>
     </div>
