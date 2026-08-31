@@ -1,150 +1,147 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import Image from "next/image";
-import { Plus, ArrowRight, Calendar } from "lucide-react";
-import Link from "next/link";
-import { apiFetch } from "@/lib/api";
+import React, { useState } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+import { placeholderUploads } from '@/lib/dashboard-data';
+import { ArrowRight, Search, FileText } from 'lucide-react';
 
-const columns = ["Document Title", "Courses", "Date"];
+interface RecentUploadsProps {
+  showViewAll?: boolean;
+}
 
-type DocumentFile = {
-  _id: string;
-  course: string;
-  title: string;
-  fileUrl: string;
-  fileType: string;
-  sizeBytes: number;
-  tags: string[];
-  downloadCount: number;
-  uploadedByType: string;
-  uploadedBy: string;
-};
+export default function RecentUploadsCard({ showViewAll = true }: RecentUploadsProps) {
+  const [levelFilter, setLevelFilter] = useState('All Levels');
+  const [semesterFilter, setSemesterFilter] = useState('All Semesters');
+  const [searchQuery, setSearchQuery] = useState('');
 
-type Upload = {
-  id: string;
-  title: string;
-  size: string;
-  type: string;
-  course: string;
-  date: string;
-};
+  const uploads = placeholderUploads.filter((item) => {
+    const matchSearch =
+      !searchQuery ||
+      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.course.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchSearch;
+  });
 
-export default function RecentUploadsCard() {
-  const [uploads, setUploads] = useState<Upload[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string>("");
-
-  useEffect(() => {
-    async function fetchRecentUploads() {
-      try {
-        setIsLoading(true);
-        setError("");
-       const [firstRes, secondRes] = await Promise.all([
-  apiFetch("/documents/mine?session=2024/2025&semester=first"),
-  apiFetch("/documents/mine?session=2024/2025&semester=second"),
-]);
-const data = { data: [...(firstRes.data || []), ...(secondRes.data || [])] };
-        
-        // Transform API response and limit to 5
-        const transformed = (data.data || [])
-          .slice(0, 5)
-          .map((doc: DocumentFile) => ({
-            id: doc._id,
-            title: doc.title,
-            size: `${(doc.sizeBytes / 1024 / 1024).toFixed(1)} MB`,
-            type: doc.fileType.toLowerCase().replace(".", "") || "pdf",
-            course: doc.course,
-            date: new Date().toISOString().split("T")[0],
-          }));
-        
-        setUploads(transformed);
-      } catch (err) {
-        console.error("Failed to fetch recent uploads:", err);
-        setError(err instanceof Error ? err.message : "Failed to load uploads.");
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    fetchRecentUploads();
-  }, []);
-
-  const isEmpty = uploads.length === 0 && !isLoading;
+  const getFileIconSrc = (type: string) => {
+    if (type === 'pdf') return '/images/file-icon-pdf.png';
+    if (type === 'pptx') return '/images/file-icon-pptx.png';
+    return '/images/file-icon-word.png';
+  };
 
   return (
-    <div className="w-full">
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 lg:gap-0 mb-6 lg:mb-8">
-        <p className="text-xl lg:text-[28px] font-bold text-[#212121]">Recent Uploads</p>
-        <div className="flex items-center gap-2 lg:gap-4">
-          <button className="bg-[#121720] text-white text-xs lg:text-base flex items-center gap-1.5 lg:gap-2 px-3 lg:px-4 py-2 lg:py-3.5 rounded-lg">
-            <Plus size={14} /> Upload New Document
-          </button>
-          <Link href="/uploads" className="bg-[#fcfdfd] border border-[#e5e5e5] text-[#212121] text-xs lg:text-base flex items-center gap-1.5 lg:gap-2 px-3 lg:px-4 py-2 lg:py-3.5 rounded-lg">
-            View all <ArrowRight size={14} />
-          </Link>
+    <div className="bg-white border border-[#f2f4f7] rounded-2xl lg:rounded-3xl p-6 shadow-xs flex flex-col gap-5">
+      {/* Header & Separate Controls */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div>
+          <h3 className="font-bold text-lg text-[#212121]">Recent Course Documents</h3>
+          <p className="text-xs text-[#21212180]">Past questions, lecture notes, and lab manuals</p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Search */}
+          <div className="relative flex-1 sm:w-56">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#21212180]" size={14} />
+            <input
+              type="text"
+              placeholder="Search course or title..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-[#fbfbfb] border border-[#f4f4f4] focus:border-[#006dff] focus:bg-white rounded-xl pl-9 pr-3 py-2 text-xs text-[#212121] placeholder:text-[#21212180] outline-none transition-colors"
+            />
+          </div>
+
+          {/* Level Filter */}
+          <select
+            value={levelFilter}
+            onChange={(e) => setLevelFilter(e.target.value)}
+            className="bg-[#fbfbfb] border border-[#f4f4f4] rounded-xl px-3 py-2 text-xs font-bold text-[#212121] outline-none cursor-pointer hover:bg-white transition-colors"
+          >
+            <option>All Levels</option>
+            <option>100 Level</option>
+            <option>200 Level</option>
+            <option>300 Level</option>
+            <option>400 Level</option>
+          </select>
+
+          {/* Semester Filter */}
+          <select
+            value={semesterFilter}
+            onChange={(e) => setSemesterFilter(e.target.value)}
+            className="bg-[#fbfbfb] border border-[#f4f4f4] rounded-xl px-3 py-2 text-xs font-bold text-[#212121] outline-none cursor-pointer hover:bg-white transition-colors"
+          >
+            <option>All Semesters</option>
+            <option>First Semester</option>
+            <option>Second Semester</option>
+          </select>
+
+          {showViewAll && (
+            <Link
+              href="/uploads"
+              className="bg-[#eff7ff] text-[#006dff] hover:bg-[#dbeafe] text-xs font-bold px-3 py-2 rounded-xl flex items-center gap-1 transition-colors"
+            >
+              <span>View All</span>
+              <ArrowRight size={13} />
+            </Link>
+          )}
         </div>
       </div>
 
-      <div className="bg-white border border-[#f2f4f7] rounded-2xl overflow-hidden overflow-x-auto">
-        <div className="flex items-center bg-[#fcfdfd] border-b border-[#f2f4f7] min-w-[500px] lg:min-w-0">
-          {columns.map((col) => (
-            <p
-              key={col}
-              className="flex-1 font-bold text-sm lg:text-lg text-[#212121] tracking-tight px-3 lg:px-6 py-3 lg:py-6 first:pl-4 lg:first:pl-8 whitespace-nowrap"
-            >
-              {col}
-            </p>
-          ))}
-        </div>
+      {/* Table */}
+      <div className="border border-[#f2f4f7] rounded-xl overflow-x-auto">
+        <table className="w-full text-left border-collapse text-xs">
+          <thead>
+            <tr className="bg-[#fbfbfb] border-b border-[#f2f4f7] font-bold text-[#21212180] uppercase tracking-wider">
+              <th className="py-3 px-4">Document Title</th>
+              <th className="py-3 px-4">Course</th>
+              <th className="py-3 px-4">Size</th>
+              <th className="py-3 px-4">Date</th>
+              <th className="py-3 px-4 text-center">Status</th>
+              <th className="py-3 px-4 text-right">Points</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-[#f2f4f7]">
+            {uploads.map((doc) => {
+              const iconSrc = getFileIconSrc(doc.type);
 
-        {isLoading ? (
-          <div className="flex items-center justify-center py-12 lg:py-20">
-            <p className="text-[#9f9f9f]">Loading...</p>
-          </div>
-        ) : error ? (
-          <div className="flex items-center justify-center py-12 lg:py-20">
-            <p className="text-[#ff3b3b] text-sm lg:text-base">{error}</p>
-          </div>
-        ) : isEmpty ? (
-          <div className="flex flex-col items-center justify-center gap-4 lg:gap-6 py-12 lg:py-20 px-4">
-            <div className="bg-[#eff6ff] rounded-full size-[80px] lg:size-[120px] flex items-center justify-center">
-              <Image src="/images/document-add-icon.svg" alt="" width={60} height={60} className="lg:w-[92px] lg:h-[92px]" />
-            </div>
-            <div className="flex flex-col items-center gap-2 max-w-[300px] lg:max-w-[400px] text-center">
-              <p className="text-lg lg:text-[22px] text-[#212121]">No uploads yet</p>
-              <p className="text-sm lg:text-base text-[#9f9f9f]">
-                Share your first lecture material and start earning Quant Points. Every upload helps your classmates and rewards you.
-              </p>
-            </div>
-            <Link href="/upload" className="bg-[#121720] text-white text-sm lg:text-base flex items-center gap-2 px-3.5 py-3 lg:py-4 rounded-lg w-full max-w-[304px] justify-center">
-              <Plus size={16} /> Upload New Document
-            </Link>
-          </div>
-        ) : (
-          <div className="min-w-[700px] lg:min-w-0">
-            {uploads.map((upload) => (
-              <div key={upload.id} className="flex items-center border-b border-[#f2f4f7] last:border-b-0">
-                <div className="flex-1 flex items-center gap-3 lg:gap-4 px-4 lg:px-8 py-4 lg:py-8">
-                  <Image
-                    src={upload.type === "doc" ? "/images/file-icon-word.png" : "/images/file-icon-pdf.png"}
-                    alt=""
-                    width={28}
-                    height={28}
-                  />
-                  <div>
-                    <p className="text-sm lg:text-base text-[#212121]">{upload.title}</p>
-                    <p className="text-xs text-[#909dad]">{upload.size}</p>
-                  </div>
-                </div>
-                <p className="flex-1 text-sm lg:text-base text-[#101828] px-3 lg:px-6">{upload.course}</p>
-                <div className="flex-1 flex items-center gap-1.5 px-3 lg:px-6 text-sm text-[#4a5565]">
-                  <Calendar size={14} /> {upload.date}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+              return (
+                <tr key={doc.id} className="hover:bg-[#fbfbfb] transition-colors">
+                  <td className="py-3 px-4">
+                    <div className="flex items-center gap-2.5">
+                      <div className="relative size-7 shrink-0 flex items-center justify-center">
+                        <Image
+                          src={iconSrc}
+                          alt={doc.type}
+                          width={28}
+                          height={28}
+                          className="object-contain"
+                        />
+                      </div>
+                      <span className="font-bold text-[#212121]">{doc.title}</span>
+                    </div>
+                  </td>
+                  <td className="py-3 px-4 font-bold text-[#006dff]">{doc.course}</td>
+                  <td className="py-3 px-4 text-[#21212180]">{doc.size}</td>
+                  <td className="py-3 px-4 text-[#21212180]">{doc.date}</td>
+                  <td className="py-3 px-4 text-center">
+                    <span
+                      className={`px-2.5 py-0.5 rounded-full font-bold text-[10px] ${
+                        doc.status === 'Approved'
+                          ? 'bg-[#e6f9f0] text-[#00b368]'
+                          : doc.status === 'In Review'
+                          ? 'bg-[#fff6f0] text-[#f60]'
+                          : 'bg-[#fee2e2] text-[#ef4444]'
+                      }`}
+                    >
+                      {doc.status}
+                    </span>
+                  </td>
+                  <td className="py-3 px-4 text-right font-bold text-[#212121]">{doc.points}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
     </div>
   );

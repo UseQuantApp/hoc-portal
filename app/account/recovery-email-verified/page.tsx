@@ -1,33 +1,44 @@
-import Image from "next/image";
-import Link from "next/link";
-import Header from "@/components/Header";
+'use client';
+
+import React from 'react';
+import Link from 'next/link';
+import Header from '@/components/Header';
+import StepIndicator from '@/components/StepIndicator';
+import { CheckCircle2, ArrowRight, ShieldCheck } from 'lucide-react';
 
 export default function RecoveryEmailVerifiedPage() {
   return (
-    <main className="min-h-screen bg-[#fbfbfb] flex flex-col items-center">
-      <div className="w-full max-w-[1100px]">
-        <Header />
-      </div>
+    <div className="min-h-screen bg-[#fbfbfb] text-[#212121] flex flex-col justify-between items-center">
+      <Header showBack backHref="/account" title="Account Security" subtitle="Completed" />
 
-      <div className="w-full max-w-[420px] flex flex-col items-center gap-8 px-6 py-10 lg:py-16">
-        <div className="relative size-[89px]">
-          <Image src="/images/success-check.svg" alt="" fill className="object-contain" />
+      <main className="w-full max-w-md my-8 px-4">
+        <div className="bg-white border border-[#f2f4f7] rounded-3xl p-6 sm:p-8 shadow-xs flex flex-col items-center text-center gap-6">
+          <StepIndicator steps={['Add Email', 'Verify OTP', 'Completed']} currentStep={2} />
+
+          <div className="size-16 rounded-full bg-[#ecfdf5] border-4 border-[#d1fae5] flex items-center justify-center text-[#00b368]">
+            <CheckCircle2 size={36} />
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <h1 className="text-2xl font-extrabold text-[#1e293b] tracking-tight">Recovery Email Linked!</h1>
+            <p className="text-xs text-[#64748b] leading-relaxed">
+              Your secondary address has been authenticated. You can now use it to restore access and secure your scholar points.
+            </p>
+          </div>
+
+          <Link
+            href="/account"
+            className="w-full bg-[#006dff] hover:bg-[#0056cc] text-white font-bold text-xs sm:text-sm py-3.5 rounded-xl flex items-center justify-center gap-2 shadow-xs transition-all"
+          >
+            <span>Return to Account Settings</span>
+            <ArrowRight size={16} />
+          </Link>
         </div>
+      </main>
 
-        <div className="flex flex-col items-center gap-4 text-center">
-          <h1 className="text-xl lg:text-2xl font-bold text-[#00d597]">Verification Sucessful!</h1>
-          <p className="text-sm lg:text-base text-[#212121]">
-            You&apos;re good to go! Your account has been successfully verified.
-          </p>
-        </div>
-
-        <Link
-          href="/dashboard"
-          className="w-full bg-[#006dff] text-white text-base lowercase py-3 rounded-xl hover:bg-[#005ce0] transition-colors text-center block"
-        >
-          continue to dashboard
-        </Link>
-      </div>
-    </main>
+      <footer className="text-center text-xs text-[#94a3b8] py-4">
+        © 2025 Quant Campus Academic System.
+      </footer>
+    </div>
   );
 }
