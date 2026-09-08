@@ -1,8 +1,41 @@
 import Image from "next/image";
 
-type Win = { id: number; text: string; time: string; icon: number };
+type Win = { id: string; text: string; time: string; icon: 1 | 2 };
 
-export default function RecentWinsCard({ wins = [] }: { wins?: Win[] }) {
+export type PointsTransaction = {
+  id?: string | number;
+  type: string;
+  amount: number;
+  description: string;
+  createdAt: string;
+};
+
+function formatRelativeTime(createdAt: string) {
+  const elapsedSeconds = (new Date(createdAt).getTime() - Date.now()) / 1000;
+  const units = [
+    { limit: 60, value: 1, unit: "second" as const },
+    { limit: 3600, value: 60, unit: "minute" as const },
+    { limit: 86400, value: 3600, unit: "hour" as const },
+    { limit: 604800, value: 86400, unit: "day" as const },
+    { limit: 2592000, value: 604800, unit: "week" as const },
+    { limit: 31536000, value: 2592000, unit: "month" as const },
+    { limit: Infinity, value: 31536000, unit: "year" as const },
+  ];
+  const unit = units.find(({ limit }) => Math.abs(elapsedSeconds) < limit) ?? units[units.length - 1];
+
+  return new Intl.RelativeTimeFormat("en", { numeric: "auto" }).format(
+    Math.round(elapsedSeconds / unit.value),
+    unit.unit,
+  );
+}
+
+export default function RecentWinsCard({ transactions = [] }: { transactions?: PointsTransaction[] }) {
+  const wins: Win[] = transactions.map((transaction, index) => ({
+    id: String(transaction.id ?? `${transaction.createdAt}-${index}`),
+    text: transaction.description,
+    time: formatRelativeTime(transaction.createdAt),
+    icon: transaction.type === "reward_redeemed" ? 2 : 1,
+  }));
   const isEmpty = wins.length === 0;
 
   return (

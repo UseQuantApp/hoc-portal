@@ -1,11 +1,12 @@
 "use client";
 
 import Image from "next/image";
-import { Bell, Moon } from "lucide-react";
+import { Bell } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api";
+import PageFilters from "@/components/dashboard/PageFilters";
 
 const navItems = [
   { label: "Dashboard", href: "/dashboard" },
@@ -31,8 +32,9 @@ useEffect(() => {
   loadUser();
 }, []);
   return (
-    <div className="flex items-center justify-between w-full">
-      <div className="flex flex-col lg:flex-row lg:items-center gap-1 lg:gap-8">
+    <div className="flex flex-col gap-3 w-full">
+      <div className="flex items-center justify-between w-full">
+        <div className="flex flex-col lg:flex-row lg:items-center gap-1 lg:gap-8">
         <div className="flex items-center gap-2">
           <div className="relative w-6 h-6 lg:w-8 lg:h-8">
             <Image src="/images/logo-icon.png" alt="Quant logo" fill className="object-contain" />
@@ -40,9 +42,9 @@ useEffect(() => {
           <span className="text-xl lg:text-3xl font-medium text-[#212121]">Quant</span>
         </div>
         <p className="text-xs lg:hidden text-[#212121]">Campus Scholar Portal Access</p>
-      </div>
+        </div>
 
-<nav className="hidden lg:flex items-center gap-6">
+        <nav className="hidden lg:flex items-center gap-6">
   {navItems.map((item) => {
     const isActive = pathname === item.href;
     return (
@@ -51,17 +53,17 @@ useEffect(() => {
         href={item.href}
         className={
           isActive
-            ? "bg-[#f60] text-white px-3.5 py-3 rounded-lg text-lg"
-            : "text-[#9f9f9f] text-lg hover:text-[#212121] dark:hover:text-white transition-colors"
+            ? "bg-[#f60] text-white px-3.5 py-2.5 rounded-xl text-lg font-medium shadow-sm transition-all duration-200"
+            : "relative text-[#9f9f9f] text-lg font-medium px-3.5 py-2.5 rounded-xl transition-all duration-200 hover:text-[#212121] hover:bg-[#fff4eb] hover:shadow-[inset_0_0_0_1px_rgba(255,102,0,0.12)]"
         }
       >
         {item.label}
       </Link>
     );
   })}
-</nav>
+  </nav>
 
-      <div className="flex items-center gap-3.5">
+  <div className="flex items-center gap-3.5">
         <button className="hidden lg:flex size-10 rounded-lg bg-[#efefef] border border-[#212121] items-center justify-center">
           <Bell size={16} />
         </button>
@@ -82,7 +84,9 @@ useEffect(() => {
        <p className="text-sm text-[#212121]">Campus Scholar</p>
      </div>
         </div>
+        </div>
       </div>
+      <PageFilters />
     </div>
   );
 }

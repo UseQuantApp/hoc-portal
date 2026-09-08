@@ -8,9 +8,22 @@ import { apiFetch } from "@/lib/api";
 
 const columns = ["Document Title", "Courses", "Date"];
 
+type CourseValue =
+  | string
+  | {
+      _id?: string;
+      code?: string;
+      title?: string;
+      department?: string;
+      level?: string;
+      [key: string]: unknown;
+    }
+  | null
+  | undefined;
+
 type DocumentFile = {
   _id: string;
-  course: string;
+  course: CourseValue;
   title: string;
   fileUrl: string;
   fileType: string;
@@ -40,24 +53,44 @@ export default function RecentUploadsCard() {
       try {
         setIsLoading(true);
         setError("");
-       const [firstRes, secondRes] = await Promise.all([
-  apiFetch("/documents/mine?session=2024/2025&semester=first"),
-  apiFetch("/documents/mine?session=2024/2025&semester=second"),
-]);
-const data = { data: [...(firstRes.data || []), ...(secondRes.data || [])] };
-        
+
+        const [firstRes, secondRes] = await Promise.all([
+          apiFetch("/documents/mine?session=2024/2025&semester=first"),
+          apiFetch("/documents/mine?session=2024/2025&semester=second"),
+        ]);
+
+        const combinedDocuments = [...(firstRes.data || []), ...(secondRes.data || [])];
+        const seenIds = new Set<string>();
+        const uniqueDocuments = combinedDocuments.filter((doc: DocumentFile) => {
+          const docId = doc._id || `${doc.title}-${doc.course}-${doc.fileUrl}`;
+          if (seenIds.has(docId)) {
+            return false;
+          }
+          seenIds.add(docId);
+          return true;
+        });
+
         // Transform API response and limit to 5
-        const transformed = (data.data || [])
+        const transformed = uniqueDocuments
           .slice(0, 5)
-          .map((doc: DocumentFile) => ({
-            id: doc._id,
-            title: doc.title,
-            size: `${(doc.sizeBytes / 1024 / 1024).toFixed(1)} MB`,
-            type: doc.fileType.toLowerCase().replace(".", "") || "pdf",
-            course: doc.course,
-            date: new Date().toISOString().split("T")[0],
-          }));
-        
+          .map((doc: DocumentFile, index: number) => {
+            const courseName =
+              typeof doc.course === "string"
+                ? doc.course
+                : doc.course && typeof doc.course === "object"
+                  ? (doc.course.code || doc.course.title || "Unknown course")
+                  : "Unknown course";
+
+            return {
+              id: doc._id || `${doc.title}-${courseName}-${doc.fileUrl}-${index}`,
+              title: doc.title,
+              size: `${(doc.sizeBytes / 1024 / 1024).toFixed(1)} MB`,
+              type: doc.fileType.toLowerCase().replace(".", "") || "pdf",
+              course: courseName,
+              date: new Date().toISOString().split("T")[0],
+            };
+          });
+
         setUploads(transformed);
       } catch (err) {
         console.error("Failed to fetch recent uploads:", err);
@@ -123,8 +156,8 @@ const data = { data: [...(firstRes.data || []), ...(secondRes.data || [])] };
           </div>
         ) : (
           <div className="min-w-[700px] lg:min-w-0">
-            {uploads.map((upload) => (
-              <div key={upload.id} className="flex items-center border-b border-[#f2f4f7] last:border-b-0">
+            {uploads.map((upload, index) => (
+              <div key={`${upload.id}-${index}`} className="flex items-center border-b border-[#f2f4f7] last:border-b-0">
                 <div className="flex-1 flex items-center gap-3 lg:gap-4 px-4 lg:px-8 py-4 lg:py-8">
                   <Image
                     src={upload.type === "doc" ? "/images/file-icon-word.png" : "/images/file-icon-pdf.png"}

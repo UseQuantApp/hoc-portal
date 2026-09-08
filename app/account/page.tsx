@@ -16,14 +16,6 @@ const badgeCategoryNames: Record<string, string> = {
   social_impact: "Social Impact",
 };
 
-const activityFeed = [
-  { id: 1, text: "You Earned +50 pts for uploading MEE 401 Notes", time: "2 hrs ago", unread: true },
-  { id: 2, text: "You Earned +50 pts for uploading MEE 401 Notes", time: "2 hrs ago", unread: true },
-  { id: 3, text: "You Earned +50 pts for uploading MEE 401 Notes", time: "2 hrs ago", unread: false },
-  { id: 4, text: "You Earned +50 pts for uploading MEE 401 Notes", time: "2 hrs ago", unread: false },
-  { id: 5, text: "You Earned +50 pts for uploading MEE 401 Notes", time: "2 hrs ago", unread: true },
-];
-
 export default function AccountPage() {
   const [activeTab, setActiveTab] = useState("Overview");
   const [badgeFilter, setBadgeFilter] = useState<"All" | "Earned" | "Locked">("All");
@@ -37,12 +29,15 @@ export default function AccountPage() {
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [saveStatus, setSaveStatus] = useState("");
   const [badges, setBadges] = useState<Array<{ id: string; name: string; description: string; category: string; points: number; earned: boolean }>>([]);
+  const [pointsSummary, setPointsSummary] = useState({ points: 0, tokens: 0, lifetimePointsEarned: 0, uploadStreakDays: 0 });
+  const [rankValue, setRankValue] = useState("Unranked");
+  const [activity, setActivity] = useState<Array<{ id: string; description: string; createdAt: string }>>([]);
 
   useEffect(() => {
     async function loadProfile() {
       try {
         const res = await apiFetch("/students/me");
-        const student = res.data;
+        const student = res.data ?? res;
         const nameParts = (student.fullName || "").split(" ");
         setSurname(nameParts[0] || "");
         setOtherName(nameParts.slice(1).join(" ") || "");
@@ -60,10 +55,64 @@ export default function AccountPage() {
   }, []);
 
   useEffect(() => {
-    apiFetch("/badges/mine")
-      .then((res) => setBadges(res.data ?? res))
-      .catch((err) => console.error("Failed to load badges:", err));
+    async function loadOverviewData() {
+      try {
+        const [pointsResponse, leaderboardResponse] = await Promise.all([
+          apiFetch("/points/mine"),
+          apiFetch("/leaderboard?limit=20"),
+        ]);
+
+        const summary = pointsResponse.data ?? pointsResponse;
+        setPointsSummary({
+          points: Number(summary.points ?? 0),
+          tokens: Number(summary.tokens ?? 0),
+          lifetimePointsEarned: Number(summary.lifetimePointsEarned ?? 0),
+          uploadStreakDays: Number(summary.uploadStreakDays ?? 0),
+        });
+
+        const leaderboard = leaderboardResponse.data ?? leaderboardResponse;
+        const me = leaderboard.me ?? null;
+        setRankValue(me?.rank ? `#${me.rank}` : "Unranked");
+      } catch (err) {
+        console.error("Failed to load overview data:", err);
+      }
+    }
+
+    loadOverviewData();
   }, []);
+
+  useEffect(() => {
+    async function loadBadges() {
+      try {
+        const res = await apiFetch("/badges/mine");
+        setBadges(res.data ?? res);
+      } catch (err) {
+        console.error("Failed to load badges:", err);
+      }
+    }
+
+    loadBadges();
+  }, []);
+
+  useEffect(() => {
+    if (activeTab !== "Notifications & Activity") return;
+
+    async function loadActivity() {
+      try {
+        const res = await apiFetch("/points/mine/history");
+        setActivity(res.data ?? res ?? []);
+      } catch (err) {
+        console.error("Failed to load activity:", err);
+        setActivity([]);
+      }
+    }
+
+    loadActivity();
+  }, [activeTab]);
+
+  const earnedBadges = badges.filter((badge) => badge.earned);
+  const totalBadgePoints = earnedBadges.reduce((sum, badge) => sum + Number(badge.points ?? 0), 0);
+  const badgeCompletion = badges.length > 0 ? Math.round((earnedBadges.length / badges.length) * 100) : 0;
 
   const handleSaveProfile = async () => {
     setSaveStatus("saving");
@@ -97,8 +146,6 @@ export default function AccountPage() {
             className="w-full text-sm lg:text-lg text-[#212121] placeholder:text-[#21212180] outline-none bg-transparent"
           />
         </div>
-        <button className="hidden lg:block bg-white rounded-xl px-5 py-4 text-[#212121] text-xl shrink-0">All levels</button>
-        <button className="hidden lg:block bg-white rounded-xl px-5 py-4 text-[#212121] text-xl shrink-0">All Semester</button>
       </div>
 
       <div className="w-full max-w-[1312px] flex flex-col lg:flex-row gap-6">
@@ -200,7 +247,7 @@ export default function AccountPage() {
                 <p className="font-bold text-lg text-[#212121]">Rewards &amp; Points</p>
                 <div className="bg-white border border-[#f2f4f7] rounded-2xl p-6 flex flex-col gap-4">
                   <p className="font-bold text-2xl text-[#212121]">
-                    4,500 <span className="text-base font-normal text-[#9f9f9f]">Quant points</span>
+                    {pointsSummary.points.toLocaleString()} <span className="text-base font-normal text-[#9f9f9f]">Quant points</span>
                   </p>
 
                   <div className="flex flex-col gap-1.5">
@@ -235,15 +282,15 @@ export default function AccountPage() {
               <div className="bg-white border border-[#f2f4f7] rounded-2xl grid grid-cols-1 lg:grid-cols-3 divide-y lg:divide-y-0 lg:divide-x divide-[#f2f4f7]">
                 <div className="p-6">
                   <p className="text-sm text-[#9f9f9f]">Badges Earned</p>
-                  <p className="font-bold text-2xl text-[#212121]">4</p>
+                  <p className="font-bold text-2xl text-[#212121]">{earnedBadges.length}</p>
                 </div>
                 <div className="p-6">
                   <p className="text-sm text-[#9f9f9f]">Points from Badges</p>
-                  <p className="font-bold text-2xl text-[#f60]">700</p>
+                  <p className="font-bold text-2xl text-[#f60]">{totalBadgePoints}</p>
                 </div>
                 <div className="p-6">
                   <p className="text-sm text-[#9f9f9f]">Completion</p>
-                  <p className="font-bold text-2xl text-[#212121]">33%</p>
+                  <p className="font-bold text-2xl text-[#212121]">{badgeCompletion}%</p>
                 </div>
               </div>
 
@@ -295,15 +342,18 @@ export default function AccountPage() {
 
           {activeTab === "Notifications & Activity" && (
             <div className="bg-white border border-[#f2f4f7] rounded-2xl overflow-hidden">
-              {activityFeed.map((item) => (
-                <div key={item.id} className="flex items-center justify-between gap-4 px-6 py-4 border-b border-[#f2f4f7] last:border-b-0">
-                  <div>
-                    <p className="text-sm lg:text-base text-[#212121]">{item.text}</p>
-                    <p className="text-xs text-[#9f9f9f]">{item.time}</p>
+              {activity.length === 0 ? (
+                <div className="px-6 py-10 text-center text-sm text-[#9f9f9f]">No activity yet</div>
+              ) : (
+                activity.map((item) => (
+                  <div key={item.id || `${item.description}-${item.createdAt}`} className="flex items-center justify-between gap-4 px-6 py-4 border-b border-[#f2f4f7] last:border-b-0">
+                    <div>
+                      <p className="text-sm lg:text-base text-[#212121]">{item.description}</p>
+                      <p className="text-xs text-[#9f9f9f]">{new Date(item.createdAt).toLocaleString()}</p>
+                    </div>
                   </div>
-                  {item.unread && <span className="size-2 rounded-full bg-[#006dff] shrink-0" />}
-                </div>
-              ))}
+                ))
+              )}
             </div>
           )}
 

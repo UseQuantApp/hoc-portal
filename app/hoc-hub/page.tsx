@@ -2,19 +2,10 @@
 
 import { useState, useEffect } from "react";
 import Navbar from "@/components/dashboard/Navbar";
-import { Bell, Plus } from "lucide-react";
+import { Bell, BookOpen, FlaskConical, GraduationCap, MessageSquare, Plus, Users, X } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 
 const tabs = ["Lecturer Alerts", "Announcement", "Timetable"];
-
-const classes = [
-  { id: 1, day: "Mon", code: "MEE 401", name: "Thermodynamics 1", time: "8:00 - 10:00 AM" },
-  { id: 2, day: "Mon", code: "MEE 305", name: "Engineering Maths", time: "10:00 - 12:00 PM" },
-  { id: 3, day: "Tue", code: "MEE 305", name: "Engineering Maths", time: "10:00 - 12:00 PM" },
-  { id: 4, day: "Wed", code: "MEE 305", name: "Engineering Maths", time: "10:00 - 12:00 PM" },
-  { id: 5, day: "Thu", code: "MEE 305", name: "Engineering Maths", time: "10:00 - 12:00 PM" },
-  { id: 6, day: "Fri", code: "MEE 305", name: "Engineering Maths", time: "10:00 - 12:00 PM" },
-];
 
 const weeklySchedule = [
   { id: 1, day: "Mon", code: "MEE 401", course: "Thermodynamics I", time: "8:00 – 10:00 AM", venue: "LT2" },
@@ -30,18 +21,70 @@ const announcementTemplates = [
   { label: "Custom message", icon: "✏️" },
 ];
 
+const adHocTemplates = [
+  { label: "Tutorial", icon: BookOpen, message: "A tutorial session for your course has been scheduled. Venue and time details are below. Attendance is strongly encouraged." },
+  { label: "Study Group", icon: Users, message: "A study group session for the upcoming exam is holding today. Come with your materials and questions." },
+  { label: "Extra Class", icon: GraduationCap, message: "An extra class has been scheduled to cover outstanding topics. Please make time to attend." },
+  { label: "Lab Session", icon: FlaskConical, message: "Lab session for your course is holding as scheduled. Bring your lab manual and safety wear." },
+  { label: "Custom message", icon: MessageSquare, message: "" },
+];
+
 export default function HocHubPage() {
   const [activeTab, setActiveTab] = useState("Lecturer Alerts");
-  const [selectedClass, setSelectedClass] = useState<number | null>(null);
+  const [classOptions, setClassOptions] = useState<Array<{ _id: string; code: string; title: string; day: string; time: string }>>([]);
+  const [selectedClass, setSelectedClass] = useState<string | null>(null);
   const [alertMessage, setAlertMessage] = useState("");
   const [announcementTitle, setAnnouncementTitle] = useState("");
   const [announcementMessage, setAnnouncementMessage] = useState("");
+  const [isAdHocModalOpen, setIsAdHocModalOpen] = useState(false);
+  const [adHocSubject, setAdHocSubject] = useState("");
+  const [adHocMessage, setAdHocMessage] = useState("");
+  const [adHocPushAlert, setAdHocPushAlert] = useState(true);
   const [lectureHistory, setLectureHistory] = useState<Array<{ id: string; title?: string; message: string; createdAt: string }>>([]);
   const [announcementHistory, setAnnouncementHistory] = useState<Array<{ id: string; title?: string; message: string; createdAt: string }>>([]);
   const [submitError, setSubmitError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const selected = classes.find((c) => c.id === selectedClass);
+  useEffect(() => {
+    async function loadClassOptions() {
+      try {
+        const semesterNames = ["first", "second"];
+        const responses = await Promise.all(
+          semesterNames.map((semester) => apiFetch(`/courses/mine?session=2024/2025&semester=${semester}`))
+        );
+
+        const allCourses = responses.flatMap((response) => response.data ?? response ?? []);
+        const uniqueCourses = new Map<string, { _id: string; code: string; title: string; day: string; time: string }>();
+
+        allCourses.forEach((course: Record<string, unknown>) => {
+          const courseId = String(course._id ?? "");
+          if (!courseId) return;
+
+          const code = String(course.code ?? course.courseCode ?? "Course");
+          const title = String(course.title ?? course.name ?? "Untitled course");
+
+          if (!uniqueCourses.has(courseId)) {
+            uniqueCourses.set(courseId, {
+              _id: courseId,
+              code,
+              title,
+              day: "Scheduled",
+              time: "Live class",
+            });
+          }
+        });
+
+        setClassOptions(Array.from(uniqueCourses.values()));
+      } catch (err) {
+        console.error("Failed to load real class options:", err);
+        setClassOptions([]);
+      }
+    }
+
+    loadClassOptions();
+  }, []);
+
+  const selected = classOptions.find((c) => c._id === selectedClass);
 
   useEffect(() => {
     Promise.all([apiFetch("/announcements/mine?type=lecture_alert"), apiFetch("/announcements/mine?type=announcement")])
@@ -63,8 +106,10 @@ export default function HocHubPage() {
       const response = await apiFetch(`/announcements/mine?type=${body.type}`);
       if (body.type === "lecture_alert") setLectureHistory(response.data ?? response);
       else setAnnouncementHistory(response.data ?? response);
+      return true;
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : "Failed to send announcement.");
+      return false;
     } finally {
       setIsSubmitting(false);
     }
@@ -83,8 +128,6 @@ export default function HocHubPage() {
             className="w-full text-sm lg:text-lg text-[#212121] placeholder:text-[#21212180] outline-none bg-transparent"
           />
         </div>
-        <button className="hidden lg:block bg-white rounded-xl px-5 py-4 text-[#212121] text-xl shrink-0">All levels</button>
-        <button className="hidden lg:block bg-white rounded-xl px-5 py-4 text-[#212121] text-xl shrink-0">All Semester</button>
       </div>
 
       <div className="w-full max-w-[1312px] flex flex-col gap-6">
@@ -112,26 +155,39 @@ export default function HocHubPage() {
         {activeTab === "Lecturer Alerts" && (
           <div className="flex flex-col lg:flex-row gap-6">
             <div className="flex-1 flex flex-col gap-4">
-              <p className="font-bold text-lg text-[#212121]">Select a class to alert</p>
+              <div className="flex items-center justify-between gap-4">
+                <p className="font-bold text-lg text-[#212121]">Select a class to alert</p>
+                <button
+                  type="button"
+                  onClick={() => setIsAdHocModalOpen(true)}
+                  className="bg-[#121720] text-white text-sm flex items-center gap-2 px-3 py-2 rounded-lg shrink-0"
+                >
+                  <Plus size={16} /> Ad-hoc Alert
+                </button>
+              </div>
 
               <div className="bg-white border border-[#f2f4f7] rounded-2xl overflow-hidden">
-                {classes.map((c) => (
-                  <button
-                    key={c.id}
-                    onClick={() => setSelectedClass(c.id)}
-                    className={`w-full flex items-center gap-4 px-5 py-4 border-b border-[#f2f4f7] last:border-b-0 text-left hover:bg-[#f9fafb] transition-colors ${
-                      selectedClass === c.id ? "bg-[#eff7ff]" : ""
-                    }`}
-                  >
-                    <span className="text-xs font-bold text-[#9f9f9f] w-8 shrink-0">{c.day}</span>
-                    <div>
-                      <p className="text-sm lg:text-base text-[#212121]">
-                        <span className="font-bold">{c.code}</span> {c.name}
-                      </p>
-                      <p className="text-xs text-[#9f9f9f]">{c.time}</p>
-                    </div>
-                  </button>
-                ))}
+                {classOptions.length === 0 ? (
+                  <div className="px-5 py-8 text-sm text-[#9f9f9f]">No classes available yet. Add or enroll in a course first.</div>
+                ) : (
+                  classOptions.map((c) => (
+                    <button
+                      key={c._id}
+                      onClick={() => setSelectedClass(c._id)}
+                      className={`w-full flex items-center gap-4 px-5 py-4 border-b border-[#f2f4f7] last:border-b-0 text-left hover:bg-[#f9fafb] transition-colors ${
+                        selectedClass === c._id ? "bg-[#eff7ff]" : ""
+                      }`}
+                    >
+                      <span className="text-xs font-bold text-[#9f9f9f] w-8 shrink-0">{c.day}</span>
+                      <div>
+                        <p className="text-sm lg:text-base text-[#212121]">
+                          <span className="font-bold">{c.code}</span> {c.title}
+                        </p>
+                        <p className="text-xs text-[#9f9f9f]">{c.time}</p>
+                      </div>
+                    </button>
+                  ))
+                )}
               </div>
             </div>
 
@@ -157,7 +213,7 @@ export default function HocHubPage() {
               ) : (
                 <div className="bg-white border border-[#f2f4f7] rounded-2xl flex flex-col gap-4 p-6">
                   <div>
-                    <p className="font-bold text-base text-[#212121]">{selected.code} — {selected.name}</p>
+                    <p className="font-bold text-base text-[#212121]">{selected.code} — {selected.title}</p>
                     <p className="text-sm text-[#9f9f9f]">{selected.day} · {selected.time}</p>
                   </div>
 
@@ -195,8 +251,8 @@ export default function HocHubPage() {
                   </label>
 
                   <button
-                    disabled={!alertMessage || isSubmitting}
-                    onClick={() => submitAnnouncement({ type: "lecture_alert", courseId: selected.id, title: `${selected.code} Alert`, message: alertMessage })}
+                    disabled={!alertMessage || isSubmitting || !selected?._id}
+                    onClick={() => submitAnnouncement({ type: "lecture_alert", courseId: selected?._id, title: `${selected.code} Alert`, message: alertMessage })}
                     className="w-full bg-[#f60] disabled:opacity-40 text-white text-sm font-bold py-3 rounded-xl"
                   >
                     Send Alert
@@ -305,6 +361,110 @@ export default function HocHubPage() {
 
         {submitError && <p className="text-sm text-[#ff3b3b]">{submitError}</p>}
 
+        {isAdHocModalOpen && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+            onClick={() => setIsAdHocModalOpen(false)}
+          >
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="ad-hoc-alert-title"
+              className="relative w-full max-w-[560px] max-h-[calc(100vh-2rem)] overflow-y-auto bg-white rounded-2xl p-6 flex flex-col gap-5"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                type="button"
+                aria-label="Close ad-hoc alert dialog"
+                onClick={() => setIsAdHocModalOpen(false)}
+                className="absolute top-5 right-5 text-[#9f9f9f] hover:text-[#212121]"
+              >
+                <X size={20} />
+              </button>
+
+              <div className="pr-8">
+                <p id="ad-hoc-alert-title" className="font-bold text-xl text-[#212121]">Ad-hoc Alert</p>
+                <p className="text-sm text-[#9f9f9f]">Not tied to a timetable class</p>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label htmlFor="ad-hoc-subject" className="text-xs font-bold text-[#9f9f9f] tracking-wide uppercase">
+                  Subject / Course (Optional)
+                </label>
+                <input
+                  id="ad-hoc-subject"
+                  value={adHocSubject}
+                  onChange={(e) => setAdHocSubject(e.target.value)}
+                  placeholder="e.g. MEE 401 Tutorial, Study Group, Lab Session..."
+                  className="bg-[#f6f6f6] border border-[#f4f4f4] rounded-lg px-4 py-3 text-sm text-[#212121] placeholder:text-[#21212180] outline-none"
+                />
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <p className="text-xs font-bold text-[#9f9f9f] tracking-wide uppercase">Quick Templates</p>
+                <div className="flex flex-wrap gap-2">
+                  {adHocTemplates.map((template) => {
+                    const Icon = template.icon;
+                    return (
+                      <button
+                        key={template.label}
+                        type="button"
+                        onClick={() => setAdHocMessage(template.message)}
+                        className="flex items-center gap-1.5 bg-[#f6f6f6] hover:bg-[#efefef] text-xs font-medium text-[#212121] px-3 py-2 rounded-full"
+                      >
+                        <Icon size={14} /> {template.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label htmlFor="ad-hoc-message" className="text-xs font-bold text-[#9f9f9f] tracking-wide uppercase">Your Message</label>
+                <textarea
+                  id="ad-hoc-message"
+                  value={adHocMessage}
+                  onChange={(e) => setAdHocMessage(e.target.value)}
+                  placeholder="Write your alert here, or pick a template"
+                  className="bg-[#f6f6f6] border border-[#f4f4f4] rounded-lg px-4 py-3 text-sm text-[#212121] placeholder:text-[#21212180] outline-none min-h-[120px] resize-none"
+                />
+                <p className="text-xs text-[#9f9f9f] text-right">{adHocMessage.length} chars</p>
+              </div>
+
+              <label className="flex items-center gap-2 text-sm text-[#212121]">
+                <input
+                  type="checkbox"
+                  className="accent-[#006dff]"
+                  checked={adHocPushAlert}
+                  onChange={(e) => setAdHocPushAlert(e.target.checked)}
+                />
+                Push Alert to enrolled students
+              </label>
+
+              <button
+                type="button"
+                disabled={!adHocMessage.trim() || isSubmitting}
+                onClick={async () => {
+                  const submitted = await submitAnnouncement({
+                    type: "lecture_alert",
+                    title: adHocSubject.trim() || "Ad-hoc Alert",
+                    message: adHocMessage,
+                  });
+                  if (submitted) {
+                    setAdHocSubject("");
+                    setAdHocMessage("");
+                    setAdHocPushAlert(true);
+                    setIsAdHocModalOpen(false);
+                  }
+                }}
+                className="w-full bg-[#f60] disabled:opacity-40 text-white text-sm font-bold py-3 rounded-xl"
+              >
+                Send Alert
+              </button>
+            </div>
+          </div>
+        )}
+
         {activeTab === "Timetable" && (
           <div className="bg-white border border-[#f2f4f7] rounded-2xl overflow-hidden">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 p-6 border-b border-[#f2f4f7]">
@@ -314,14 +474,7 @@ export default function HocHubPage() {
                   500L Mechanical Engineering · Semester 1 · {weeklySchedule.length} classes
                 </p>
               </div>
-              <div className="flex items-center gap-3">
-                <button className="text-[#f60] font-bold text-sm flex items-center gap-1">
-                  Send alert →
-                </button>
-                <button className="bg-[#f60] text-white text-sm font-bold flex items-center gap-2 px-4 py-2.5 rounded-lg">
-                  <Plus size={16} /> Add Class
-                </button>
-              </div>
+              <p className="text-xs text-[#9f9f9f]">Classes are added automatically via the WhatsApp bot.</p>
             </div>
 
             <div className="overflow-x-auto">

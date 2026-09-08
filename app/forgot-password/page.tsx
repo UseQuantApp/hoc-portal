@@ -1,8 +1,36 @@
+"use client";
+
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import Header from "@/components/Header";
+import { apiFetch } from "@/lib/api";
 
 export default function ForgotPasswordPage() {
+  const [email, setEmail] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [submitError, setSubmitError] = useState("");
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setSuccessMessage("");
+    setSubmitError("");
+    setIsSubmitting(true);
+
+    try {
+      await apiFetch("/auth/forgot-password", {
+        method: "POST",
+        body: JSON.stringify({ email }),
+      });
+      setSuccessMessage("If that email is registered, a reset code has been sent.");
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : "Unable to send reset code.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <main className="min-h-screen bg-[#fbfbfb] flex flex-col items-center">
       <div className="w-full max-w-[1100px]">
@@ -19,7 +47,7 @@ export default function ForgotPasswordPage() {
             </p>
           </div>
 
-          <form className="flex flex-col gap-6">
+          <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
             <div className="flex flex-col gap-3">
               <label htmlFor="email" className="text-sm lg:text-base font-bold text-[#212121]">
                 Email Address
@@ -28,18 +56,35 @@ export default function ForgotPasswordPage() {
                 <input
                   id="email"
                   type="email"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  required
                   placeholder="you@example.com"
                   className="w-full text-base text-[#212121] placeholder:text-[#21212180] outline-none bg-transparent"
                 />
               </div>
             </div>
 
-        <Link
-        href="/reset-password"
-        className="w-full bg-[#f60] text-white text-base lg:text-lg font-bold lowercase py-3 rounded-xl hover:bg-[#e55600] transition-colors text-center block"
-           >
-       send reset link
-        </Link>
+            {successMessage && (
+              <p className="text-sm text-[#00a86b] text-center">{successMessage}</p>
+            )}
+            {submitError && (
+              <p className="text-sm font-bold text-[#ff3b3b] text-center">{submitError}</p>
+            )}
+
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full bg-[#f60] disabled:opacity-50 text-white text-base lg:text-lg font-bold lowercase py-3 rounded-xl hover:bg-[#e55600] transition-colors"
+            >
+              {isSubmitting ? "sending..." : "send reset link"}
+            </button>
+
+            {successMessage && (
+              <Link href="/reset-password" className="text-sm lg:text-base font-bold text-[#006dff] text-center">
+                Enter your reset code
+              </Link>
+            )}
 
             <Link href="/" className="text-sm lg:text-base font-bold text-[#006dff] text-center">
               Back to Login

@@ -7,9 +7,22 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 
+type CourseValue =
+  | string
+  | {
+      _id?: string;
+      code?: string;
+      title?: string;
+      department?: string;
+      level?: string;
+      [key: string]: unknown;
+    }
+  | null
+  | undefined;
+
 type DocumentFile = {
   _id: string;
-  course: string;
+  course: CourseValue;
   title: string;
   fileUrl: string;
   fileType: string;
@@ -24,12 +37,13 @@ type DocumentFile = {
 type Upload = {
   id: string;
   title: string;
+  fileUrl: string;
   size: string;
   type: string;
   course: string;
   date: string;
   status: string;
-  points: string;
+  pointsAwarded: number | null;
 };
 
 export default function UploadsPage() {
@@ -49,16 +63,26 @@ export default function UploadsPage() {
 const data = { data: [...(firstRes.data || []), ...(secondRes.data || [])] };
         
         // Transform API response to component format
-        const transformedUploads = (data.data || []).map((doc: DocumentFile) => ({
-          id: doc._id,
-          title: doc.title,
-          size: `${(doc.sizeBytes / 1024 / 1024).toFixed(1)} MB`,
-          type: doc.fileType.toLowerCase().replace(".", "") || "pdf",
-          course: doc.course,
-          date: doc.createdAt ? new Date(doc.createdAt).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
-          status: "—",
-          points: "—",
-        }));
+        const transformedUploads = (data.data || []).map((doc: DocumentFile & { status?: string; pointsAwarded?: number | null }) => {
+          const courseName =
+            typeof doc.course === "string"
+              ? doc.course
+              : doc.course && typeof doc.course === "object"
+                ? (doc.course.code || doc.course.title || "Unknown course")
+                : "Unknown course";
+
+          return {
+            id: doc._id,
+            title: doc.title,
+            fileUrl: doc.fileUrl,
+            size: `${(doc.sizeBytes / 1024 / 1024).toFixed(1)} MB`,
+            type: doc.fileType.toLowerCase().replace(".", "") || "pdf",
+            course: courseName,
+            date: doc.createdAt ? new Date(doc.createdAt).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
+            status: typeof doc.status === "string" ? doc.status.toLowerCase() : "pending",
+            pointsAwarded: typeof doc.pointsAwarded === "number" ? doc.pointsAwarded : doc.pointsAwarded == null ? null : Number(doc.pointsAwarded),
+          };
+        });
         
         setUploads(transformedUploads);
       } catch (err) {

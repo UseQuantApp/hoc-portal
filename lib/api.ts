@@ -1,4 +1,4 @@
-const API_BASE = "https://quant-server.up.railway.app/api/v1";
+const API_BASE = "https://quant-production-1004.up.railway.app/api/v1";
 
 export async function apiFetch(path: string, options: RequestInit = {}) {
   const token = typeof window !== "undefined" ? localStorage.getItem("quant_token") : null;

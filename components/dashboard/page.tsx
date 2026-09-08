@@ -6,15 +6,10 @@ import Navbar from "@/components/dashboard/Navbar";
 import PointsProgressCard from "@/components/dashboard/PointsProgressCardNew";
 import RecentUploadsCard from "@/components/dashboard/RecentUploadsCard";
 import LeaderboardCard from "@/components/dashboard/LeaderboardCard";
-import RecentWinsCard from "@/components/dashboard/RecentWinsCard";
+import RecentWinsCard, { type PointsTransaction } from "@/components/dashboard/RecentWinsCard";
 import type { Leader } from "@/components/dashboard/LeaderboardCard";
-import {
-  placeholderWins,
-} from "@/lib/dashboard-data";
 
 type PointsSummary = { points: number; tokens: number; lifetimePointsEarned: number; uploadStreakDays: number };
-type PointsTransaction = { type: string; amount: number; description: string; createdAt: string };
-
 export default function DashboardPage() {
   const [fullName, setFullName] = useState("");
   const [points, setPoints] = useState<PointsSummary>({ points: 0, tokens: 0, lifetimePointsEarned: 0, uploadStreakDays: 0 });
@@ -78,8 +73,6 @@ export default function DashboardPage() {
             className="w-full text-sm lg:text-lg text-[#212121] placeholder:text-[#21212180] outline-none bg-transparent"
           />
         </div>
-        <button className="hidden lg:block bg-white rounded-xl px-5 py-4 text-[#212121] text-xl shrink-0">All levels</button>
-        <button className="hidden lg:block bg-white rounded-xl px-5 py-4 text-[#212121] text-xl shrink-0">All Semester</button>
       </div>
 
       <div className="w-full max-w-[1312px] flex flex-col gap-10">
@@ -90,7 +83,9 @@ export default function DashboardPage() {
             {history.length === 0 ? <p className="py-3 text-sm text-[#9f9f9f]">No points transactions yet.</p> : history.slice(0, 8).map((item, index) => (
               <div key={`${item.createdAt}-${index}`} className="flex items-center justify-between gap-4 py-3">
                 <div><p className="text-sm text-[#212121]">{item.description}</p><p className="text-xs text-[#9f9f9f]">{new Date(item.createdAt).toLocaleDateString()}</p></div>
-                <p className="text-sm font-bold text-[#00b368]">{item.amount > 0 ? "+" : ""}{item.amount} pts</p>
+                <p className={`text-sm font-bold ${item.amount < 0 ? "text-[#ff3b3b]" : "text-[#00b368]"}`}>
+                  {item.amount > 0 ? "+" : ""}{item.amount} pts
+                </p>
               </div>
             ))}
           </div>
@@ -98,7 +93,7 @@ export default function DashboardPage() {
         <RecentUploadsCard />
         <div className="flex flex-col lg:flex-row gap-6">
           <LeaderboardCard leaders={leaders} me={leaderboardMe} />
-          <RecentWinsCard wins={placeholderWins} />
+          <RecentWinsCard transactions={history} />
         </div>
       </div>
     </main>

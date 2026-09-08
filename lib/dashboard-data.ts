@@ -17,15 +17,6 @@ export const placeholderUploads: {
   { id: 5, title: "Thermodynamics 1 .pdf", size: "150 Mb", type: "pdf", course: "MEE 305", date: "2024-12-02", status: "In Review", points: "0 pts (In review)" },
 ];
 
-export const placeholderWins: { id: number; text: string; time: string; icon: 1 | 2 }[] = [
-  { id: 1, text: "You Earned +50 pts for uploading MEE 401 Notes", time: "2 hrs ago", icon: 1 },
-  { id: 2, text: "You Earned +50 pts for uploading MEE 401 Notes", time: "2 hrs ago", icon: 2 },
-  { id: 3, text: "You Earned +50 pts for uploading MEE 401 Notes", time: "2 hrs ago", icon: 1 },
-  { id: 4, text: "You Earned +50 pts for uploading MEE 401 Notes", time: "2 hrs ago", icon: 2 },
-  { id: 5, text: "You Earned +50 pts for uploading MEE 401 Notes", time: "2 hrs ago", icon: 1 },
-  { id: 6, text: "You Earned +50 pts for uploading MEE 401 Notes", time: "2 hrs ago", icon: 1 },
-];
-
 export const placeholderProgress = {
   totalUploaded: 200,
   pointsEarned: 4500,

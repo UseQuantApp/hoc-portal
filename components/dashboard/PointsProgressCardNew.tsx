@@ -38,7 +38,7 @@ export default function PointsProgressCard({
   const firstName = fullName ? fullName.split(" ")[0] : "";
 
   return (
-    <div className="w-full">
+    <div className="w-full font-sans">
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 lg:gap-0 mb-6 lg:mb-8">
         <div className="flex flex-col gap-1.5 lg:gap-3">
           <p className="text-base lg:text-[28px] text-[#212121]">

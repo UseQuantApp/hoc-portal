@@ -53,8 +53,6 @@ export default function RewardsPage() {
             className="w-full text-sm lg:text-lg text-[#212121] placeholder:text-[#21212180] outline-none bg-transparent"
           />
         </div>
-        <button className="hidden lg:block bg-white rounded-xl px-5 py-4 text-[#212121] text-xl shrink-0">All levels</button>
-        <button className="hidden lg:block bg-white rounded-xl px-5 py-4 text-[#212121] text-xl shrink-0">All Semester</button>
       </div>
 
       <div className="w-full max-w-[1312px] flex flex-col gap-2">
@@ -107,7 +105,7 @@ export default function RewardsPage() {
                 modal === "failed" ? "bg-[#ff3b3b]" : "bg-[#00b368]"
               }`}
             >
-              ✓
+              {modal === "failed" ? "✕" : "✓"}
             </div>
 
             <div>

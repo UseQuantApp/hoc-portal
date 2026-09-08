@@ -10,21 +10,22 @@ const fileIcons: Record<string, string> = {
 };
 
 const statusStyles: Record<string, { bg: string; text: string; icon: React.ReactNode }> = {
-  "In Review": { bg: "bg-[#fef9c2]", text: "text-[#894b00]", icon: <Clock size={12} /> },
-  Approved: { bg: "bg-[#dcfce7]", text: "text-[#016630]", icon: <CheckCircle2 size={12} /> },
-  Rejected: { bg: "bg-[#ffe2e2]", text: "text-[#9f0712]", icon: <XCircle size={12} /> },
+  pending: { bg: "bg-[#fef9c2]", text: "text-[#894b00]", icon: <Clock size={12} /> },
+  approved: { bg: "bg-[#dcfce7]", text: "text-[#016630]", icon: <CheckCircle2 size={12} /> },
+  rejected: { bg: "bg-[#ffe2e2]", text: "text-[#9f0712]", icon: <XCircle size={12} /> },
   "—": { bg: "bg-[#f3f4f6]", text: "text-[#6b7280]", icon: null },
 };
 
 type Upload = {
   id: string;
   title: string;
+  fileUrl: string;
   size: string;
   type: string;
   course: string;
   date: string;
   status: string;
-  points: string;
+  pointsAwarded: number | null;
 };
 
 export default function FullUploadsTable({ uploads }: { uploads: Upload[] }) {
@@ -44,7 +45,10 @@ export default function FullUploadsTable({ uploads }: { uploads: Upload[] }) {
 
       <div className="min-w-[750px]">
         {uploads.map((upload) => {
-          const style = statusStyles[upload.status];
+          const statusKey = String(upload.status ?? "pending").toLowerCase();
+          const style = statusStyles[statusKey] || statusStyles["—"];
+          const pointsText = upload.pointsAwarded == null ? "—" : `${upload.pointsAwarded} pts`;
+
           return (
             <div key={upload.id} className="flex items-center border-b border-[#f2f4f7] last:border-b-0">
               <div className="flex-1 flex items-center gap-4 px-8 py-8">
@@ -60,12 +64,17 @@ export default function FullUploadsTable({ uploads }: { uploads: Upload[] }) {
               </div>
               <div className="flex-1 px-6">
                 <div className={`${style?.bg || "bg-[#f3f4f6]"} ${style?.text || "text-[#6b7280]"} flex items-center gap-1 px-2.5 py-1 rounded-full w-fit text-xs`}>
-                  {style?.icon} {upload.status}
+                  {style?.icon} {statusKey === "pending" ? "Pending" : statusKey === "approved" ? "Approved" : statusKey === "rejected" ? "Rejected" : upload.status}
                 </div>
               </div>
-              <p className="flex-1 text-base text-[#101828] px-6">{upload.points}</p>
+              <p className="flex-1 text-base text-[#101828] px-6">{pointsText}</p>
               <div className="w-[140px] shrink-0 flex items-center justify-center gap-6">
-                <button className="text-[#212121] hover:text-[#006dff]">
+                <button
+                  type="button"
+                  aria-label={`Open ${upload.title}`}
+                  className="text-[#212121] hover:text-[#006dff]"
+                  onClick={() => window.open(upload.fileUrl, "_blank", "noopener,noreferrer")}
+                >
                   <ExternalLink size={20} />
                 </button>
                 <button className="text-[#006dff]">
