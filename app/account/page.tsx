@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { startTransition, useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Navbar from "@/components/dashboard/Navbar";
-import { Pencil, Coins, TrendingUp, ChevronDown } from "lucide-react";
+import { LogOut, Pencil, Coins, TrendingUp, ChevronDown } from "lucide-react";
 import { apiFetch } from "@/lib/api";
+import { logoutStudent } from "@/lib/auth";
 
 const sidebarItems = ["Overview", "Badges & Achievements", "Notifications & Activity", "Account Settings"];
 
@@ -17,6 +19,7 @@ const badgeCategoryNames: Record<string, string> = {
 };
 
 export default function AccountPage() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState("Overview");
   const [badgeFilter, setBadgeFilter] = useState<"All" | "Earned" | "Locked">("All");
 
@@ -27,6 +30,7 @@ export default function AccountPage() {
   const [settingsLevel, setSettingsLevel] = useState("");
   const [email, setEmail] = useState("");
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+  const [isLoadingOverview, setIsLoadingOverview] = useState(true);
   const [saveStatus, setSaveStatus] = useState("");
   const [badges, setBadges] = useState<Array<{ id: string; name: string; description: string; category: string; points: number; earned: boolean }>>([]);
   const [pointsSummary, setPointsSummary] = useState({ points: 0, tokens: 0, lifetimePointsEarned: 0, uploadStreakDays: 0 });
@@ -34,10 +38,21 @@ export default function AccountPage() {
   const [activity, setActivity] = useState<Array<{ id: string; description: string; createdAt: string }>>([]);
 
   useEffect(() => {
-    async function loadProfile() {
+    if (new URLSearchParams(window.location.search).get("tab") === "activity") {
+      startTransition(() => setActiveTab("Notifications & Activity"));
+    }
+  }, []);
+
+  useEffect(() => {
+    async function loadPageData() {
       try {
-        const res = await apiFetch("/students/me");
-        const student = res.data ?? res;
+        const [profileResponse, pointsResponse, leaderboardResponse] = await Promise.all([
+          apiFetch("/students/me"),
+          apiFetch("/points/mine"),
+          apiFetch("/leaderboard?limit=20"),
+        ]);
+
+        const student = profileResponse.data ?? profileResponse;
         const nameParts = (student.fullName || "").split(" ");
         setSurname(nameParts[0] || "");
         setOtherName(nameParts.slice(1).join(" ") || "");
@@ -45,22 +60,6 @@ export default function AccountPage() {
         setDept(student.department || "");
         setSettingsLevel(student.level || "");
         setEmail(student.email || "");
-      } catch (err) {
-        console.error("Failed to load profile:", err);
-      } finally {
-        setIsLoadingProfile(false);
-      }
-    }
-    loadProfile();
-  }, []);
-
-  useEffect(() => {
-    async function loadOverviewData() {
-      try {
-        const [pointsResponse, leaderboardResponse] = await Promise.all([
-          apiFetch("/points/mine"),
-          apiFetch("/leaderboard?limit=20"),
-        ]);
 
         const summary = pointsResponse.data ?? pointsResponse;
         setPointsSummary({
@@ -71,14 +70,15 @@ export default function AccountPage() {
         });
 
         const leaderboard = leaderboardResponse.data ?? leaderboardResponse;
-        const me = leaderboard.me ?? null;
-        setRankValue(me?.rank ? `#${me.rank}` : "Unranked");
+        setRankValue(leaderboard.me?.rank ? `#${leaderboard.me.rank}` : "Unranked");
       } catch (err) {
-        console.error("Failed to load overview data:", err);
+        console.error("Failed to load account overview:", err);
+      } finally {
+        setIsLoadingProfile(false);
+        setIsLoadingOverview(false);
       }
     }
-
-    loadOverviewData();
+    loadPageData();
   }, []);
 
   useEffect(() => {
@@ -133,6 +133,10 @@ export default function AccountPage() {
     }
   };
 
+  const handleLogout = async () => {
+    await logoutStudent(router.push);
+  };
+
   return (
     <main className="min-h-screen bg-[#fbfbfb] flex flex-col items-center gap-6 lg:gap-8 px-4 md:px-16 py-6 lg:py-8">
       <div className="w-full max-w-[1312px]">
@@ -162,6 +166,16 @@ export default function AccountPage() {
               {item}
             </button>
           ))}
+          <div className="border-t border-[#ececec] mt-3 pt-3">
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="w-full flex items-center gap-2 text-left px-4 py-3 rounded-lg text-sm lg:text-base text-[#d92d20] bg-[#fff1f0] hover:bg-[#ffe4e2] transition-colors"
+            >
+              <LogOut size={17} />
+              Logout
+            </button>
+          </div>
         </div>
 
         {/* Content */}
@@ -200,13 +214,15 @@ export default function AccountPage() {
                       <p className="text-xs text-[#9f9f9f] flex items-center gap-1">
                         <Coins size={14} /> Tokens
                       </p>
-                      <p className="font-bold text-lg text-[#212121]">4,500</p>
+                      <p className="font-bold text-lg text-[#212121]">
+                        {isLoadingOverview ? "..." : pointsSummary.tokens.toLocaleString()}
+                      </p>
                     </div>
                     <div>
                       <p className="text-xs text-[#9f9f9f] flex items-center gap-1">
                         <TrendingUp size={14} /> Rank
                       </p>
-                      <p className="font-bold text-lg text-[#212121]">12th</p>
+                      <p className="font-bold text-lg text-[#212121]">{isLoadingOverview ? "..." : rankValue}</p>
                     </div>
                     <div>
                       <p className="text-xs text-[#9f9f9f]">Badge</p>
@@ -247,7 +263,7 @@ export default function AccountPage() {
                 <p className="font-bold text-lg text-[#212121]">Rewards &amp; Points</p>
                 <div className="bg-white border border-[#f2f4f7] rounded-2xl p-6 flex flex-col gap-4">
                   <p className="font-bold text-2xl text-[#212121]">
-                    {pointsSummary.points.toLocaleString()} <span className="text-base font-normal text-[#9f9f9f]">Quant points</span>
+                    {isLoadingOverview ? "..." : pointsSummary.points.toLocaleString()} <span className="text-base font-normal text-[#9f9f9f]">Quant points</span>
                   </p>
 
                   <div className="flex flex-col gap-1.5">

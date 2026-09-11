@@ -217,10 +217,10 @@ export default function AssignmentsPage() {
 
                     {/* Content */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-4 mb-2">
-                        <div>
+                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4 mb-2">
+                        <div className="min-w-0">
                           <p
-                            className={`font-bold text-lg ${
+                            className={`font-bold text-lg break-words ${
                               assignment.completed
                                 ? "text-[#9f9f9f] line-through"
                                 : "text-[#212121]"
@@ -237,7 +237,7 @@ export default function AssignmentsPage() {
                         </div>
 
                         {/* Status Badge */}
-                        <div>
+                        <div className="shrink-0 self-start">
                           {assignment.completed ? (
                             <span className="bg-[#dcfce7] text-[#016630] text-xs font-semibold px-3 py-1 rounded-full whitespace-nowrap">
                               ✓ Completed

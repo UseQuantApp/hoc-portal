@@ -1,9 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import Image from "next/image";
-import { ArrowRight, X } from "lucide-react";
-import FullLeaderboard from "@/components/dashboard/FullLeaderboard";
+import { ArrowRight } from "lucide-react";
+import Link from "next/link";
 
 export type Leader = {
   name: string;
@@ -17,7 +16,6 @@ export type Leader = {
 };
 
 export default function LeaderboardCard({ leaders = [], me }: { leaders?: Leader[]; me?: { rank: number; points: number } | null }) {
-  const [showModal, setShowModal] = useState(false);
   const hasYouRanked = leaders.some((l) => l.isYou);
   const displayLeaders = me && !hasYouRanked
     ? [...leaders, { name: "You", tier: `#${me.rank}`, materials: 0, points: me.points.toLocaleString(), medal: null, rank: me.rank, avatar: "/images/avatar-user.png", isYou: true }]
@@ -27,12 +25,12 @@ export default function LeaderboardCard({ leaders = [], me }: { leaders?: Leader
     <div className="flex flex-col gap-4 lg:gap-8 flex-1">
       <div className="flex items-center justify-between">
         <p className="text-lg lg:text-[28px] font-bold text-[#212121]">Top Contributors Leaderboard</p>
-        <button
-          onClick={() => setShowModal(true)}
+        <Link
+          href="/leaderboard"
           className="bg-[#fcfdfd] border border-[#e5e5e5] text-[#212121] text-xs lg:text-base flex items-center gap-1.5 lg:gap-2 px-3 lg:px-4 py-2 lg:py-3.5 rounded-lg shrink-0"
         >
           View all <ArrowRight size={14} />
-        </button>
+        </Link>
       </div>
 
       <div className="border border-[#ececec] bg-[#fbfbfb] rounded-2xl flex flex-col gap-2 lg:gap-4 p-2 lg:p-4">
@@ -109,21 +107,6 @@ export default function LeaderboardCard({ leaders = [], me }: { leaders?: Leader
         )}
       </div>
 
-      {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50" onClick={() => setShowModal(false)}>
-          <div className="bg-white rounded-2xl w-full max-w-[700px] max-h-[85vh] overflow-y-auto p-4 lg:p-6"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between mb-4 lg:mb-6">
-              <p className="text-lg lg:text-2xl font-bold text-[#212121]">Top Contributors Leaderboard</p>
-              <button onClick={() => setShowModal(false)} className="text-[#9f9f9f]">
-                <X size={24} />
-              </button>
-            </div>
-            <FullLeaderboard leaders={displayLeaders} />
-          </div>
-        </div>
-      )}
     </div>
   );
 }

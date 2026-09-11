@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { apiFetch } from "@/lib/api";
 import Navbar from "@/components/dashboard/Navbar";
 import PointsProgressCard from "@/components/dashboard/PointsProgressCardNew";
@@ -80,7 +81,7 @@ export default function DashboardPage() {
         <section className="bg-white border border-[#f2f4f7] rounded-2xl p-5">
           <p className="font-bold text-lg text-[#212121]">Points History</p>
           <div className="mt-3 divide-y divide-[#f2f4f7]">
-            {history.length === 0 ? <p className="py-3 text-sm text-[#9f9f9f]">No points transactions yet.</p> : history.slice(0, 8).map((item, index) => (
+            {history.length === 0 ? <p className="py-3 text-sm text-[#9f9f9f]">No points transactions yet.</p> : history.slice(0, 7).map((item, index) => (
               <div key={`${item.createdAt}-${index}`} className="flex items-center justify-between gap-4 py-3">
                 <div><p className="text-sm text-[#212121]">{item.description}</p><p className="text-xs text-[#9f9f9f]">{new Date(item.createdAt).toLocaleDateString()}</p></div>
                 <p className={`text-sm font-bold ${item.amount < 0 ? "text-[#ff3b3b]" : "text-[#00b368]"}`}>
@@ -89,6 +90,11 @@ export default function DashboardPage() {
               </div>
             ))}
           </div>
+          {history.length > 7 && (
+            <Link href="/account?tab=activity" className="mt-3 block text-center text-sm font-medium text-[#006dff] hover:underline">
+              View all
+            </Link>
+          )}
         </section>
         <RecentUploadsCard />
         <div className="flex flex-col lg:flex-row gap-6">

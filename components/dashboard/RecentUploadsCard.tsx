@@ -155,10 +155,10 @@ export default function RecentUploadsCard() {
             </Link>
           </div>
         ) : (
-          <div className="min-w-[700px] lg:min-w-0">
+          <div className="lg:min-w-0">
             {uploads.map((upload, index) => (
-              <div key={`${upload.id}-${index}`} className="flex items-center border-b border-[#f2f4f7] last:border-b-0">
-                <div className="flex-1 flex items-center gap-3 lg:gap-4 px-4 lg:px-8 py-4 lg:py-8">
+              <div key={`${upload.id}-${index}`} className="flex flex-col lg:flex-row lg:items-center border-b border-[#f2f4f7] last:border-b-0">
+                <div className="flex-1 flex items-center gap-3 lg:gap-4 px-4 lg:px-8 pt-4 lg:py-8">
                   <Image
                     src={upload.type === "doc" ? "/images/file-icon-word.png" : "/images/file-icon-pdf.png"}
                     alt=""
@@ -170,8 +170,8 @@ export default function RecentUploadsCard() {
                     <p className="text-xs text-[#909dad]">{upload.size}</p>
                   </div>
                 </div>
-                <p className="flex-1 text-sm lg:text-base text-[#101828] px-3 lg:px-6">{upload.course}</p>
-                <div className="flex-1 flex items-center gap-1.5 px-3 lg:px-6 text-sm text-[#4a5565]">
+                <p className="flex-1 text-sm lg:text-base text-[#101828] px-4 lg:px-6 pb-2 lg:pb-0">{upload.course}</p>
+                <div className="flex-1 flex items-center gap-1.5 px-4 lg:px-6 pb-4 lg:pb-0 text-sm text-[#4a5565]">
                   <Calendar size={14} /> {upload.date}
                 </div>
               </div>

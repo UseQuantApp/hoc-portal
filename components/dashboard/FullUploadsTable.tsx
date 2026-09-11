@@ -30,7 +30,41 @@ type Upload = {
 
 export default function FullUploadsTable({ uploads }: { uploads: Upload[] }) {
   return (
-    <div className="bg-white border border-[#f2f4f7] rounded-2xl overflow-hidden overflow-x-auto">
+    <div className="bg-white border border-[#f2f4f7] rounded-2xl overflow-hidden">
+      <div className="lg:hidden divide-y divide-[#f2f4f7]">
+        {uploads.map((upload) => {
+          const statusKey = String(upload.status ?? "pending").toLowerCase();
+          const style = statusStyles[statusKey] || statusStyles["—"];
+          const pointsText = upload.pointsAwarded == null ? "—" : `${upload.pointsAwarded} pts`;
+
+          return (
+            <div key={upload.id} className="p-4">
+              <div className="flex items-start gap-3">
+                <Image src={fileIcons[upload.type]} alt="" width={28} height={28} />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium text-[#212121]">{upload.title}</p>
+                  <p className="mt-1 text-xs text-[#909dad]">{upload.course} · {upload.size}</p>
+                  <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-[#4a5565]">
+                    <span>{upload.date}</span>
+                    <span className={`${style.bg} ${style.text} flex items-center gap-1 rounded-full px-2 py-1`}>
+                      {style.icon} {statusKey === "pending" ? "Pending" : statusKey === "approved" ? "Approved" : statusKey === "rejected" ? "Rejected" : upload.status}
+                    </span>
+                    <span>{pointsText}</span>
+                  </div>
+                </div>
+                <div className="flex shrink-0 gap-3">
+                  <button type="button" aria-label={`Open ${upload.title}`} className="text-[#212121]" onClick={() => window.open(upload.fileUrl, "_blank", "noopener,noreferrer")}>
+                    <ExternalLink size={18} />
+                  </button>
+                  <button type="button" aria-label={`Edit ${upload.title}`} className="text-[#006dff]"><Pencil size={18} /></button>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="hidden lg:block overflow-x-auto">
       <div className="flex items-center bg-[#fcfdfd] border-b border-[#f2f4f7] min-w-[750px]">
         {columns.map((col) => (
           <p
@@ -84,6 +118,7 @@ export default function FullUploadsTable({ uploads }: { uploads: Upload[] }) {
             </div>
           );
         })}
+      </div>
       </div>
     </div>
   );
