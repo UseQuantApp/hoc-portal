@@ -14,10 +14,12 @@ export default function SignInPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loginError, setLoginError] = useState("");
+  const [isVerificationRequired, setIsVerificationRequired] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   const handleSignIn = async () => {
     setLoginError("");
+    setIsVerificationRequired(false);
     setIsLoggingIn(true);
     try {
       const res = await apiFetch("/auth/student-login", {
@@ -27,7 +29,14 @@ export default function SignInPage() {
       localStorage.setItem("quant_token", res.data.token);
       router.push("/dashboard");
     } catch (err) {
-      setLoginError(err instanceof Error ? err.message : "Login failed.");
+      const message = err instanceof Error ? err.message : "Login failed.";
+      const requiresVerification = /verify|verification|verified/i.test(message);
+      setIsVerificationRequired(requiresVerification);
+      setLoginError(
+        requiresVerification
+          ? "Please complete email verification before logging in."
+          : message,
+      );
     } finally {
       setIsLoggingIn(false);
     }
@@ -94,7 +103,18 @@ export default function SignInPage() {
             </Link>
 
             {loginError && (
-              <p className="text-xs font-bold text-[#ff3b3b] text-center">{loginError}</p>
+              <div className="flex flex-col items-center gap-2 text-center">
+                <p className="text-xs font-bold text-[#ff3b3b]">{loginError}</p>
+                {isVerificationRequired && (
+                  <Link
+                    href="/verify-email"
+                    onClick={() => sessionStorage.setItem("quant_signup_email", email)}
+                    className="text-sm font-bold text-[#006dff] hover:underline"
+                  >
+                    Verify email
+                  </Link>
+                )}
+              </div>
             )}
 
             <button
