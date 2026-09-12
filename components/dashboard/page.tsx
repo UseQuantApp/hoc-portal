@@ -77,7 +77,7 @@ export default function DashboardPage() {
       </div>
 
       <div className="w-full max-w-[1312px] flex flex-col gap-10">
-        <PointsProgressCard pointsEarned={points.points} ringValue={points.lifetimePointsEarned.toLocaleString()} tokens={points.tokens} uploadStreakDays={points.uploadStreakDays} fullName={fullName} />
+        <PointsProgressCard pointsEarned={points.points} tokens={points.tokens} uploadStreakDays={points.uploadStreakDays} fullName={fullName} />
         <section className="bg-white border border-[#f2f4f7] rounded-2xl p-5">
           <p className="font-bold text-lg text-[#212121]">Points History</p>
           <div className="mt-3 divide-y divide-[#f2f4f7]">
