@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { startTransition, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Header from "@/components/Header";
@@ -21,7 +21,7 @@ export default function VerifyOtpPage() {
 
   useEffect(() => {
     const storedEmail = sessionStorage.getItem("quant_signup_email");
-    if (storedEmail) setEmail(storedEmail);
+    if (storedEmail) startTransition(() => setEmail(storedEmail));
   }, []);
 
   useEffect(() => {
@@ -118,7 +118,7 @@ export default function VerifyOtpPage() {
             </div>
 
             <div className="flex flex-col items-center gap-3 w-full">
-              <div className="flex gap-2 lg:gap-3.5">
+              <div className="flex gap-1.5 sm:gap-2 lg:gap-3.5">
                 {otpDigits.map((digit, i) => (
                   <input
                     key={i}
@@ -137,7 +137,7 @@ export default function VerifyOtpPage() {
                       }
                     }}
                     id={`otp-${i}`}
-                    className={`size-12 lg:size-14 text-center text-xl lg:text-2xl rounded-lg border focus:outline-none text-black disabled:opacity-50 disabled:bg-[#f6f6f6] ${
+                    className={`size-10 sm:size-12 lg:size-14 text-center text-xl lg:text-2xl rounded-lg border focus:outline-none text-black disabled:opacity-50 disabled:bg-[#f6f6f6] ${
                       otpError ? "border-[#e3e3e3]" : "border-[#e0e0e0] focus:border-[#006dff]"
                     }`}
                   />

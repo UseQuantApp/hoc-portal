@@ -1,8 +1,17 @@
+"use client";
+
+import { startTransition, useEffect, useState } from "react";
 import Link from "next/link";
 import Header from "@/components/Header";
 import { Mail } from "lucide-react";
 
 export default function VerifyEmailIntroPage() {
+  const [email, setEmail] = useState("");
+
+  useEffect(() => {
+    startTransition(() => setEmail(sessionStorage.getItem("quant_signup_email") || ""));
+  }, []);
+
   return (
     <main className="min-h-screen bg-[#fbfbfb] flex flex-col items-center">
       <div className="w-full max-w-[1100px]">
@@ -18,7 +27,7 @@ export default function VerifyEmailIntroPage() {
           <h1 className="text-lg lg:text-xl font-bold text-[#212121]">Verify your email</h1>
           <p className="text-sm lg:text-base text-[#212121]">
             Verify your email to complete your Quant account setup and access your dashboard. We&apos;ll send a verification code to{" "}
-            <span className="font-bold text-[#006dff]">user@email.com</span>
+            <span className="font-bold text-[#006dff]">{email || "your email"}</span>
           </p>
         </div>
 
