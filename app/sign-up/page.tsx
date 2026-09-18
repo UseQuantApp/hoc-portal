@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ChevronDown, Eye, EyeOff } from "lucide-react";
 import { apiFetch } from "@/lib/api";
+import { normalizeNigerianPhone } from "@/lib/phone";
 
 const institutions = ["LASU"];
 const faculties = ["Faculty of Engineering"];
@@ -52,7 +53,7 @@ export default function SignUpPage() {
         method: "POST",
         body: JSON.stringify({
           fullName,
-          phone: whatsapp,
+          phone: normalizeNigerianPhone(whatsapp),
           email,
           password,
           matricNumber,
@@ -207,6 +208,7 @@ export default function SignUpPage() {
                       type="tel"
                       value={whatsapp}
                       onChange={(e) => setWhatsapp(e.target.value)}
+                      onBlur={() => setWhatsapp((prev) => normalizeNigerianPhone(prev))}
                       placeholder="+234 701 234 5678"
                       className="w-full text-base text-[#212121] placeholder:text-[#21212180] outline-none bg-transparent"
                     />

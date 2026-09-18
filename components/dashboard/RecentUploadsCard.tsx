@@ -110,9 +110,9 @@ export default function RecentUploadsCard() {
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 lg:gap-0 mb-6 lg:mb-8">
         <p className="text-xl lg:text-[28px] font-bold text-[#212121]">Recent Uploads</p>
         <div className="flex items-center gap-2 lg:gap-4">
-          <button className="bg-[#121720] text-white text-xs lg:text-base flex items-center gap-1.5 lg:gap-2 px-3 lg:px-4 py-2 lg:py-3.5 rounded-lg">
+          <Link href="/upload" className="bg-[#121720] text-white text-xs lg:text-base flex items-center gap-1.5 lg:gap-2 px-3 lg:px-4 py-2 lg:py-3.5 rounded-lg">
             <Plus size={14} /> Upload New Document
-          </button>
+          </Link>
           <Link href="/uploads" className="bg-[#fcfdfd] border border-[#e5e5e5] text-[#212121] text-xs lg:text-base flex items-center gap-1.5 lg:gap-2 px-3 lg:px-4 py-2 lg:py-3.5 rounded-lg">
             View all <ArrowRight size={14} />
           </Link>

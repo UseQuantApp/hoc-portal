@@ -36,6 +36,8 @@ export default function AccountPage() {
   const [pointsSummary, setPointsSummary] = useState({ points: 0, tokens: 0, lifetimePointsEarned: 0, uploadStreakDays: 0 });
   const [rankValue, setRankValue] = useState("Unranked");
   const [activity, setActivity] = useState<Array<{ id: string; description: string; createdAt: string }>>([]);
+  const [materialsUploaded, setMaterialsUploaded] = useState(0);
+  const [documentsDelivered, setDocumentsDelivered] = useState(0);
 
   useEffect(() => {
     if (new URLSearchParams(window.location.search).get("tab") === "activity") {
@@ -46,10 +48,12 @@ export default function AccountPage() {
   useEffect(() => {
     async function loadPageData() {
       try {
-        const [profileResponse, pointsResponse, leaderboardResponse] = await Promise.all([
+        const [profileResponse, pointsResponse, leaderboardResponse, firstDocsResponse, secondDocsResponse] = await Promise.all([
           apiFetch("/students/me"),
           apiFetch("/points/mine"),
           apiFetch("/leaderboard?limit=20"),
+          apiFetch("/documents/mine?session=2024/2025&semester=first"),
+          apiFetch("/documents/mine?session=2024/2025&semester=second"),
         ]);
 
         const student = profileResponse.data ?? profileResponse;
@@ -71,6 +75,11 @@ export default function AccountPage() {
 
         const leaderboard = leaderboardResponse.data ?? leaderboardResponse;
         setRankValue(leaderboard.me?.rank ? `#${leaderboard.me.rank}` : "Unranked");
+
+        const allDocs = [...(firstDocsResponse.data || []), ...(secondDocsResponse.data || [])];
+        setMaterialsUploaded(allDocs.length);
+        const totalDelivered = allDocs.reduce((sum: number, doc: any) => sum + (doc.downloadCount || 0), 0);
+        setDocumentsDelivered(totalDelivered);
       } catch (err) {
         console.error("Failed to load account overview:", err);
       } finally {
@@ -113,6 +122,17 @@ export default function AccountPage() {
   const earnedBadges = badges.filter((badge) => badge.earned);
   const totalBadgePoints = earnedBadges.reduce((sum, badge) => sum + Number(badge.points ?? 0), 0);
   const badgeCompletion = badges.length > 0 ? Math.round((earnedBadges.length / badges.length) * 100) : 0;
+
+  // Reward tier progression
+  const rewardTiers = [2500, 5500, 8500, 12500, 12500, 12500, 12500];
+  const currentPoints = pointsSummary.points;
+  const nextTierIndex = rewardTiers.findIndex((tier) => currentPoints < tier);
+  const nextTierGoal = nextTierIndex !== -1 ? rewardTiers[nextTierIndex] : rewardTiers[rewardTiers.length - 1];
+  const previousTierGoal = nextTierIndex > 0 ? rewardTiers[nextTierIndex - 1] : 0;
+  const pointsInCurrentRange = currentPoints - previousTierGoal;
+  const pointsNeededForTier = nextTierGoal - previousTierGoal;
+  const rewardTierProgress = Math.min(Math.round((pointsInCurrentRange / pointsNeededForTier) * 100), 100);
+  const pointsToNextTier = Math.max(nextTierGoal - currentPoints, 0);
 
   const handleSaveProfile = async () => {
     setSaveStatus("saving");
@@ -241,19 +261,13 @@ export default function AccountPage() {
                   <div className="p-6">
                     <p className="text-sm text-[#9f9f9f]">Materials Uploaded</p>
                     <p className="font-bold text-2xl text-[#212121]">
-                      25 <span className="text-sm font-normal text-[#9f9f9f]">files</span>
+                      {isLoadingOverview ? "..." : materialsUploaded} <span className="text-sm font-normal text-[#9f9f9f]">files</span>
                     </p>
                   </div>
                   <div className="p-6">
-                    <p className="text-sm text-[#9f9f9f]">Downloads</p>
+                    <p className="text-sm text-[#9f9f9f]">Documents Delivered</p>
                     <p className="font-bold text-2xl text-[#212121]">
-                      800 <span className="text-sm font-normal text-[#9f9f9f]">Downloads</span>
-                    </p>
-                  </div>
-                  <div className="p-6">
-                    <p className="text-sm text-[#9f9f9f]">Average Rating</p>
-                    <p className="font-bold text-2xl text-[#212121]">
-                      4.5 <span className="text-sm font-normal text-[#9f9f9f]">out of 5.0</span>
+                      {isLoadingOverview ? "..." : documentsDelivered} <span className="text-sm font-normal text-[#9f9f9f]">downloads</span>
                     </p>
                   </div>
                 </div>
@@ -269,14 +283,14 @@ export default function AccountPage() {
                   <div className="flex flex-col gap-1.5">
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-[#212121]">Progress to Next reward tier</span>
-                      <span className="text-[#9f9f9f]">Goal: 5,500 pts</span>
+                      <span className="text-[#9f9f9f]">Goal: {nextTierGoal.toLocaleString()} pts</span>
                     </div>
                     <div className="w-full h-2 bg-[#f2f4f7] rounded-full overflow-hidden">
-                      <div className="h-full bg-[#00b368] rounded-full" style={{ width: "75%" }} />
+                      <div className="h-full bg-[#00b368] rounded-full" style={{ width: `${rewardTierProgress}%` }} />
                     </div>
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-[#9f9f9f]">Keep uploading to unlock more rewards</span>
-                      <span className="text-[#9f9f9f]">1,000 pts to next reward · 75%</span>
+                      <span className="text-[#9f9f9f]">{pointsToNextTier.toLocaleString()} pts to next reward · {rewardTierProgress}%</span>
                     </div>
                   </div>
 

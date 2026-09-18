@@ -172,33 +172,7 @@ export default function ResetPasswordPage() {
 
         {/* Right: Blue promo panel */}
         <div className="hidden lg:block w-full lg:w-1/2 relative bg-[#006dff] rounded-3xl overflow-hidden aspect-[644/953] max-w-[644px]">
-          <p className="absolute top-8 left-1/2 -translate-x-1/2 w-[80%] text-center text-white text-2xl md:text-[32px] leading-tight">
-            Your department&apos;s <span className="font-bold">entire library</span>
-          </p>
-
-          <div className="absolute left-[5%] top-[20%] w-[90%] aspect-square opacity-90">
-            <Image src="/images/blob-bg.svg" alt="" fill className="object-contain" />
-          </div>
-
-          <div className="absolute left-1/2 top-[58%] -translate-x-1/2 -translate-y-1/2 w-[85%] max-w-[380px] rotate-[-7deg]">
-            <Image
-              src="/images/phone-mockup.png"
-              alt="WhatsApp chat on phone showing Quant assistant"
-              width={454}
-              height={646}
-              className="w-full h-auto"
-            />
-          </div>
-
-          <div className="absolute right-[8%] top-[45%] w-[28%] max-w-[168px] rotate-[10deg]">
-            <div className="relative aspect-square">
-              <Image src="/images/badge-ellipse.svg" alt="" fill className="object-contain" />
-              <Image src="/images/star-badge.svg" alt="" fill className="object-contain" />
-              <div className="absolute inset-0 flex items-center justify-center text-center text-white text-xs leading-tight px-4">
-                Your Academic Success Begins <span className="font-bold">Here!</span>
-              </div>
-            </div>
-          </div>
+          <Image src="/images/blue.png" alt="" fill className="object-cover" />
         </div>
       </div>
     </main>

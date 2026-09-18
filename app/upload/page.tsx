@@ -4,7 +4,7 @@ import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/dashboard/Navbar";
 import Image from "next/image";
-import { ChevronDown, AlertTriangle, Upload } from "lucide-react";
+import { ChevronDown, AlertTriangle, Upload, Check } from "lucide-react";
 import { apiFetchFormData } from "@/lib/api";
 
 const levels = ["100", "200", "300", "400", "500"];
@@ -106,15 +106,29 @@ export default function UploadPage() {
               className="hidden"
               onChange={(e) => e.target.files?.[0] && setFile(e.target.files[0])}
             />
-            <Image src="/images/upload-icon.svg" alt="" width={28} height={28} />
-            <p className="text-sm lg:text-base text-[#212121] mt-2">
-              {file ? file.name : "Drag and Drop a file, or click to browse"}
-            </p>
-            <p className="text-xs lg:text-sm text-[#909dad] text-center">
-              Accepted file types: DOC, PDF, PPTX
-              <br />
-              Max size: 300MB per file
-            </p>
+            {file ? (
+              <div className="flex flex-col items-center justify-center gap-3">
+                <div className="flex items-center justify-center size-16 lg:size-20 rounded-full bg-[#006dff]">
+                  <Check size={32} className="lg:w-10 lg:h-10 text-white" />
+                </div>
+                <p className="text-sm lg:text-base font-semibold text-[#006dff]">{file.name}</p>
+                <p className="text-xs lg:text-sm text-[#9f9f9f]">
+                  {(file.size / 1024 / 1024).toFixed(2)} MB · Click to change
+                </p>
+              </div>
+            ) : (
+              <>
+                <Image src="/images/upload-icon.svg" alt="" width={28} height={28} />
+                <p className="text-sm lg:text-base text-[#212121] mt-2">
+                  Drag and Drop a file, or click to browse
+                </p>
+                <p className="text-xs lg:text-sm text-[#909dad] text-center">
+                  Accepted file types: DOC, PDF, PPTX
+                  <br />
+                  Max size: 300MB per file
+                </p>
+              </>
+            )}
           </label>
         </div>
 

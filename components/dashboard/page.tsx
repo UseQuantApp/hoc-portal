@@ -11,37 +11,59 @@ import RecentWinsCard, { type PointsTransaction } from "@/components/dashboard/R
 import type { Leader } from "@/components/dashboard/LeaderboardCard";
 
 type PointsSummary = { points: number; tokens: number; lifetimePointsEarned: number; uploadStreakDays: number };
+
+// NEW: proper type for badges instead of any[] — matches the Badge schema from GET /badges/mine
+type Badge = {
+  id: string;
+  key: string;
+  name: string;
+  description: string;
+  category: "upload_milestones" | "streak_achievements" | "rank_prestige" | "special_recognition" | "social_impact";
+  tier: "bronze" | "silver" | "gold" | "platinum" | "diamond" | "obsidian";
+  points: number;
+  earned: boolean;
+  earnedAt: string | null;
+};
+
 export default function DashboardPage() {
   const [fullName, setFullName] = useState("");
   const [points, setPoints] = useState<PointsSummary>({ points: 0, tokens: 0, lifetimePointsEarned: 0, uploadStreakDays: 0 });
   const [history, setHistory] = useState<PointsTransaction[]>([]);
   const [leaders, setLeaders] = useState<Leader[]>([]);
   const [leaderboardMe, setLeaderboardMe] = useState<{ rank: number; points: number } | null>(null);
+  const [badges, setBadges] = useState<Badge[]>([]); // CHANGED: was useState<any[]>([])
 
   useEffect(() => {
-  async function loadUser() {
-    try {
-      const res = await apiFetch("/students/me");
-      console.log("Dashboard fetched user:", res.data);
-      setFullName(res.data.fullName || "");
-    } catch (err) {
-      console.error("Failed to load user for dashboard:", err);
+    async function loadUser() {
+      try {
+        const res = await apiFetch("/students/me");
+        console.log("Dashboard fetched user:", res.data);
+        setFullName(res.data.fullName || "");
+      } catch (err) {
+        console.error("Failed to load user for dashboard:", err);
+      }
     }
-  }
-  loadUser();
-}, []);
+    loadUser();
+  }, []);
 
   useEffect(() => {
     async function loadDashboardData() {
       try {
-        const [pointsResponse, historyResponse, leaderboardResponse] = await Promise.all([
+        // CHANGED: added apiFetch("/badges/mine") as a 4th parallel request, and badgesResponse to destructure it
+        const [pointsResponse, historyResponse, leaderboardResponse, badgesResponse] = await Promise.all([
           apiFetch("/points/mine"),
           apiFetch("/points/mine/history"),
           apiFetch("/leaderboard?limit=20"),
+          apiFetch("/badges/mine"),
         ]);
         const summary = pointsResponse.data ?? pointsResponse;
         setPoints(summary);
         setHistory(historyResponse.data ?? historyResponse);
+
+        // NEW: unwrap and store badges the same way every other response here is unwrapped
+        const badgesData: Badge[] = badgesResponse.data ?? badgesResponse;
+        setBadges(badgesData);
+
         const leaderboard = leaderboardResponse.data ?? leaderboardResponse;
         setLeaderboardMe(leaderboard.me);
         setLeaders((leaderboard.entries ?? []).map((entry: { rank: number; fullName: string; points: number; materialsUploaded: number }) => ({
@@ -77,7 +99,15 @@ export default function DashboardPage() {
       </div>
 
       <div className="w-full max-w-[1312px] flex flex-col gap-10">
-        <PointsProgressCard pointsEarned={points.points} tokens={points.tokens} uploadStreakDays={points.uploadStreakDays} fullName={fullName} />
+        {/* CHANGED: now also passes badges and pointsData (the raw points summary) down to the card */}
+        <PointsProgressCard
+          pointsEarned={points.points}
+          tokens={points.tokens}
+          uploadStreakDays={points.uploadStreakDays}
+          fullName={fullName}
+          badges={badges}
+          pointsData={points}
+        />
         <section className="bg-white border border-[#f2f4f7] rounded-2xl p-5">
           <p className="font-bold text-lg text-[#212121]">Points History</p>
           <div className="mt-3 divide-y divide-[#f2f4f7]">

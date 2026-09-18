@@ -1,31 +1,37 @@
 import Image from "next/image";
 import { Lock, AlertTriangle, ArrowRight } from "lucide-react";
 
-type Week = { label: string; points: number };
+// NEW: matches the Badge schema from GET /badges/mine — replaces the old local Week type
+type Badge = {
+  id: string;
+  key: string;
+  name: string;
+  description: string;
+  category: string;
+  tier: "bronze" | "silver" | "gold" | "platinum" | "diamond" | "obsidian";
+  points: number;
+  earned: boolean;
+  earnedAt: string | null;
+};
+
+// NEW: matches the pointsData prop shape sent from app/dashboard/page.tsx
+type PointsSummary = { points: number; tokens: number; lifetimePointsEarned: number; uploadStreakDays: number };
 
 type PointsProgressCardProps = {
   totalUploaded?: number;
   pointsEarned?: number;
-  weeks?: Week[];
+  badges?: Badge[]; // CHANGED: was weeks?: Week[]
+  pointsData?: PointsSummary; // NEW
   fullName?: string;
   tokens?: number;
   uploadStreakDays?: number;
 };
 
-const defaultWeeks: Week[] = [
-  { label: "T1", points: 2500 },
-  { label: "T2", points: 5500 },
-  { label: "T3", points: 8500 },
-  { label: "T4", points: 12500 },
-  { label: "T5", points: 12500 },
-  { label: "T6", points: 12500 },
-  { label: "T7", points: 12500 },
-];
-
 export default function PointsProgressCard({
   totalUploaded = 0,
   pointsEarned = 0,
-  weeks = defaultWeeks,
+  badges = [], // CHANGED: was weeks = defaultWeeks
+  pointsData = { points: 0, tokens: 0, lifetimePointsEarned: 0, uploadStreakDays: 0 }, // NEW
   fullName = "",
   tokens = 0,
   uploadStreakDays = 0,
@@ -33,10 +39,13 @@ export default function PointsProgressCard({
   const isEmpty = pointsEarned === 0;
   const firstName = fullName ? fullName.split(" ")[0] : "";
 
-  // The first threshold the student hasn't reached yet is the "current" one —
-  // it gets the ring treatment. Everything before it is achieved (green),
-  // everything after stays locked (grey).
-  const currentIndex = weeks.findIndex((w) => pointsEarned < w.points);
+  // NEW: sort ascending by points threshold so the row still renders in progression order,
+  // since the API doesn't guarantee /badges/mine comes back pre-sorted.
+  const sortedBadges = [...badges].sort((a, b) => a.points - b.points);
+
+  // NEW: the first badge the student hasn't earned yet is "current" and gets the ring.
+  // Everything earned is achieved (green); everything else stays locked (grey).
+  const currentIndex = sortedBadges.findIndex((b) => !b.earned);
 
   return (
     <div className="w-full font-sans">
@@ -83,61 +92,72 @@ export default function PointsProgressCard({
 
         {/* Badge row — mirrors Figma's Frame 2147227805: horizontal, space-between */}
         <div className="flex items-center justify-between gap-3 lg:gap-6 border-l border-[#e5e5e5] pl-4 lg:pl-8 flex-1 min-w-0">
-          {weeks.map((week, i) => {
-            const achieved = currentIndex === -1 ? true : i < currentIndex;
-            const isCurrent = i === currentIndex;
-            const pointsAway = week.points - pointsEarned;
+          {sortedBadges.length === 0 ? (
+            // NEW: graceful empty/loading state — badges hasn't arrived from the API yet
+            <p className="text-xs lg:text-sm text-[#9f9f9f] px-2">Loading badges...</p>
+          ) : (
+            sortedBadges.map((badge, i) => {
+              // CHANGED: achieved now comes straight from the API's earned flag, not an index comparison
+              const achieved = badge.earned;
+              const isCurrent = i === currentIndex;
+              const pointsAway = badge.points - pointsData.points;
 
-            const badgeIcon = (
-              <div
-                className={`relative size-[26px] lg:size-[34px] rounded-md flex flex-col items-center justify-center border-2 border-white ${
-                  achieved || isCurrent ? "bg-[#008551]" : "bg-[#cbcbcb]"
-                }`}
-              >
-                <Image src="/images/badge-medal.svg" alt="" width={11} height={11} className="lg:w-[14px] lg:h-[14px]" />
-                <span className="absolute bottom-1 lg:bottom-1.5 text-white text-[5px] lg:text-[6px] font-bold">
-                  {week.label}
-                </span>
-              </div>
-            );
+              // NEW: short label inside the badge icon — first letter of the tier (B, S, G, P, D, O).
+              // Swap this for badge.name initials or something else if you want a different look.
+              const badgeLabel = badge.tier.charAt(0).toUpperCase();
 
-            if (isCurrent) {
-              // The one badge in progress: wrap it in the ring and show "X points away"
-              return (
-                <div key={i} className="relative shrink-0 size-[90px] lg:size-[130px] flex flex-col items-center justify-center">
-                  <Image src="/images/progress-ring.svg" alt="" fill className="object-contain" />
-                  <div className="absolute top-3 lg:top-5">{badgeIcon}</div>
-                  <p className="text-xs lg:text-base font-bold text-[#212121] mt-8 lg:mt-11">
-                    {week.points.toLocaleString()}
-                  </p>
-                  <p className="text-[8px] lg:text-[10px] text-black">Points</p>
-                  <div className="flex items-center gap-1">
-                    <AlertTriangle size={9} className="text-[#ffcc14]" />
-                    <p className="text-[8px] lg:text-[10px] font-bold text-[#ffcc14]">
-                      {pointsAway.toLocaleString()} points Away
-                    </p>
-                  </div>
+              const badgeIcon = (
+                <div
+                  className={`relative size-[26px] lg:size-[34px] rounded-md flex flex-col items-center justify-center border-2 border-white ${
+                    achieved || isCurrent ? "bg-[#008551]" : "bg-[#cbcbcb]"
+                  }`}
+                >
+                  {/* CHANGED: corrected filename from badge-medal.svg to badge-metal.svg */}
+                  <Image src="/images/badge-metal.svg" alt="" width={11} height={11} className="lg:w-[14px] lg:h-[14px]" />
+                  <span className="absolute bottom-1 lg:bottom-1.5 text-white text-[5px] lg:text-[6px] font-bold">
+                    {badgeLabel}
+                  </span>
                 </div>
               );
-            }
 
-            return (
-              <div key={i} className="flex flex-col items-center gap-1.5 lg:gap-2 shrink-0">
-                {badgeIcon}
-                <p className={`text-xs lg:text-base font-bold ${achieved ? "text-[#212121]" : "text-[#9f9f9f]"}`}>
-                  {week.points.toLocaleString()}
-                </p>
-                {achieved ? (
-                  <p className="text-[8px] lg:text-[10px] text-[#9f9f9f]">Points</p>
-                ) : (
-                  <div className="flex items-center gap-0.5">
-                    <Lock size={7} className="text-[#9f9f9f]" />
-                    <p className="text-[8px] lg:text-[10px] text-[#9f9f9f]">Points</p>
+              if (isCurrent) {
+                // The one badge in progress: wrap it in the ring and show "X points away"
+                return (
+                  <div key={badge.id} className="relative shrink-0 size-[90px] lg:size-[130px] flex flex-col items-center justify-center">
+                    <Image src="/images/progress-ring.svg" alt="" fill className="object-contain" />
+                    <div className="absolute top-3 lg:top-5">{badgeIcon}</div>
+                    <p className="text-xs lg:text-base font-bold text-[#212121] mt-8 lg:mt-11">
+                      {badge.points.toLocaleString()}
+                    </p>
+                    <p className="text-[8px] lg:text-[10px] text-black">Points</p>
+                    <div className="flex items-center gap-1">
+                      <AlertTriangle size={9} className="text-[#ffcc14]" />
+                      <p className="text-[8px] lg:text-[10px] font-bold text-[#ffcc14]">
+                        {pointsAway.toLocaleString()} points Away
+                      </p>
+                    </div>
                   </div>
-                )}
-              </div>
-            );
-          })}
+                );
+              }
+
+              return (
+                <div key={badge.id} className="flex flex-col items-center gap-1.5 lg:gap-2 shrink-0">
+                  {badgeIcon}
+                  <p className={`text-xs lg:text-base font-bold ${achieved ? "text-[#212121]" : "text-[#9f9f9f]"}`}>
+                    {badge.points.toLocaleString()}
+                  </p>
+                  {achieved ? (
+                    <p className="text-[8px] lg:text-[10px] text-[#9f9f9f]">Points</p>
+                  ) : (
+                    <div className="flex items-center gap-0.5">
+                      <Lock size={7} className="text-[#9f9f9f]" />
+                      <p className="text-[8px] lg:text-[10px] text-[#9f9f9f]">Points</p>
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          )}
         </div>
       </div>
     </div>

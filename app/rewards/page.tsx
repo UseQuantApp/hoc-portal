@@ -91,15 +91,6 @@ export default function RewardsPage() {
         <Navbar />
       </div>
 
-      <div className="w-full max-w-[1312px] flex items-center gap-4">
-        <div className="bg-white flex-1 rounded-xl p-3 lg:p-4 flex items-center gap-2.5">
-          <input
-            placeholder="Search materials, courses..."
-            className="w-full text-sm lg:text-lg text-[#212121] placeholder:text-[#21212180] outline-none bg-transparent"
-          />
-        </div>
-      </div>
-
       <div className="w-full max-w-[1312px] flex flex-col gap-2">
         <p className="text-xl lg:text-2xl font-bold text-[#212121]">Earn Rewards for Sharing Knowledge</p>
         <p className="text-sm lg:text-base text-[#9f9f9f]">

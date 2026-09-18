@@ -169,7 +169,7 @@ useEffect(() => {
           </aside>
         </div>
       )}
-      <PageFilters />
+      {pathname !== "/rewards" && <PageFilters />}
     </div>
   );
 }
