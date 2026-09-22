@@ -1,13 +1,43 @@
 "use client";
 
+import { Search } from "lucide-react";
 import { useState } from "react";
 
-export default function PageFilters() {
+// NEW: optional props so a parent page can "own" the search value and react to it.
+// Pages that don't pass these still work exactly as before (falls back to local state).
+type PageFiltersProps = {
+  searchQuery?: string;
+  onSearchChange?: (value: string) => void;
+};
+
+export default function PageFilters({ searchQuery, onSearchChange }: PageFiltersProps) {
+  const [internalSearch, setInternalSearch] = useState("");
+  const isControlled = onSearchChange !== undefined;
+  const currentSearch = isControlled ? (searchQuery ?? "") : internalSearch;
+
+  const handleSearchChange = (value: string) => {
+    if (isControlled) {
+      onSearchChange?.(value);
+    } else {
+      setInternalSearch(value);
+    }
+  };
+
   const [selectedLevel, setSelectedLevel] = useState("All levels");
   const [selectedSemester, setSelectedSemester] = useState("All Semester");
 
   return (
-    <div className="flex flex-wrap items-center justify-end gap-3 w-full">
+    <div className="flex flex-wrap items-center gap-3 w-full">
+      <div className="bg-white rounded-xl px-3 lg:px-4 py-3 flex items-center gap-2.5 flex-1 min-w-[160px] border border-[#e5e5e5]">
+        <Search size={18} className="text-[#9f9f9f] shrink-0" />
+        <input
+          value={currentSearch}
+          onChange={(event) => handleSearchChange(event.target.value)}
+          placeholder="Search materials, courses..."
+          className="w-full text-sm lg:text-base text-[#212121] placeholder:text-[#21212180] outline-none bg-transparent"
+        />
+      </div>
+
       <select
         value={selectedLevel}
         onChange={(event) => setSelectedLevel(event.target.value)}

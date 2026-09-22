@@ -90,20 +90,15 @@ export default function PointsProgressCard({
         <Stat label="Tokens" value={tokens.toLocaleString()} />
         <Stat label="Upload streak" value={`${uploadStreakDays} days`} />
 
-        {/* Badge row — mirrors Figma's Frame 2147227805: horizontal, space-between */}
+        {/* TEMPORARY: hiding the whole badge row per request — uncomment to bring it back
         <div className="flex items-center justify-between gap-3 lg:gap-6 border-l border-[#e5e5e5] pl-4 lg:pl-8 flex-1 min-w-0">
           {sortedBadges.length === 0 ? (
-            // NEW: graceful empty/loading state — badges hasn't arrived from the API yet
             <p className="text-xs lg:text-sm text-[#9f9f9f] px-2">Loading badges...</p>
           ) : (
             sortedBadges.map((badge, i) => {
-              // CHANGED: achieved now comes straight from the API's earned flag, not an index comparison
               const achieved = badge.earned;
               const isCurrent = i === currentIndex;
               const pointsAway = badge.points - pointsData.points;
-
-              // NEW: short label inside the badge icon — first letter of the tier (B, S, G, P, D, O).
-              // Swap this for badge.name initials or something else if you want a different look.
               const badgeLabel = badge.tier.charAt(0).toUpperCase();
 
               const badgeIcon = (
@@ -112,7 +107,6 @@ export default function PointsProgressCard({
                     achieved || isCurrent ? "bg-[#008551]" : "bg-[#cbcbcb]"
                   }`}
                 >
-                  {/* CHANGED: corrected filename from badge-medal.svg to badge-metal.svg */}
                   <Image src="/images/badge-metal.svg" alt="" width={11} height={11} className="lg:w-[14px] lg:h-[14px]" />
                   <span className="absolute bottom-1 lg:bottom-1.5 text-white text-[5px] lg:text-[6px] font-bold">
                     {badgeLabel}
@@ -121,7 +115,6 @@ export default function PointsProgressCard({
               );
 
               if (isCurrent) {
-                // The one badge in progress: wrap it in the ring and show "X points away"
                 return (
                   <div key={badge.id} className="relative shrink-0 size-[90px] lg:size-[130px] flex flex-col items-center justify-center">
                     <Image src="/images/progress-ring.svg" alt="" fill className="object-contain" />
@@ -159,6 +152,7 @@ export default function PointsProgressCard({
             })
           )}
         </div>
+        */}
       </div>
     </div>
   );

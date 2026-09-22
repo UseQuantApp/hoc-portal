@@ -6,6 +6,8 @@ import FullUploadsTable from "@/components/dashboard/FullUploadsTable";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { apiFetch } from "@/lib/api";
+import { getCurrentAcademicSession } from "@/lib/academic";
+import { dedupeDocuments } from "@/lib/documents";
 
 type CourseValue =
   | string
@@ -50,18 +52,22 @@ export default function UploadsPage() {
   const [uploads, setUploads] = useState<Upload[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>("");
+  // NEW: search value, now owned by this page instead of living only inside PageFilters
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     async function fetchUploads() {
       try {
         setIsLoading(true);
         setError("");
+        // CHANGED: session computed instead of hardcoded to "2024/2025"
+        const session = getCurrentAcademicSession();
         const [firstRes, secondRes] = await Promise.all([
-  apiFetch("/documents/mine?session=2024/2025&semester=first"),
-  apiFetch("/documents/mine?session=2024/2025&semester=second"),
-]);
-const data = { data: [...(firstRes.data || []), ...(secondRes.data || [])] };
-        
+          apiFetch(`/documents/mine?session=${session}&semester=first`),
+          apiFetch(`/documents/mine?session=${session}&semester=second`),
+        ]);
+        const data = { data: dedupeDocuments([...(firstRes.data || []), ...(secondRes.data || [])]) };
+
         // Transform API response to component format
         const transformedUploads = (data.data || []).map((doc: DocumentFile & { status?: string; pointsAwarded?: number | null }) => {
           const courseName =
@@ -83,7 +89,7 @@ const data = { data: [...(firstRes.data || []), ...(secondRes.data || [])] };
             pointsAwarded: typeof doc.pointsAwarded === "number" ? doc.pointsAwarded : doc.pointsAwarded == null ? null : Number(doc.pointsAwarded),
           };
         });
-        
+
         setUploads(transformedUploads);
       } catch (err) {
         console.error("Failed to fetch uploads:", err);
@@ -96,10 +102,22 @@ const data = { data: [...(firstRes.data || []), ...(secondRes.data || [])] };
     fetchUploads();
   }, []);
 
+  // NEW: filters your own uploads by title or course name as you type in the navbar search box.
+  // Case-insensitive, matches either field. Only applies once uploads have loaded.
+  const trimmedQuery = searchQuery.trim().toLowerCase();
+  const filteredUploads = trimmedQuery
+    ? uploads.filter(
+        (upload) =>
+          upload.title.toLowerCase().includes(trimmedQuery) ||
+          upload.course.toLowerCase().includes(trimmedQuery)
+      )
+    : uploads;
+
   return (
     <main className="min-h-screen bg-[#fbfbfb] flex flex-col items-center gap-6 lg:gap-8 px-4 md:px-16 py-6 lg:py-8">
       <div className="w-full max-w-[1312px]">
-        <Navbar />
+        {/* CHANGED: passes search state down through Navbar to PageFilters */}
+        <Navbar searchQuery={searchQuery} onSearchChange={setSearchQuery} />
       </div>
 
       <div className="w-full max-w-[1312px] flex flex-col gap-6 lg:gap-8">
@@ -135,8 +153,13 @@ const data = { data: [...(firstRes.data || []), ...(secondRes.data || [])] };
               </Link>
             </div>
           </div>
+        ) : filteredUploads.length === 0 ? (
+          // NEW: distinguishes "you have zero uploads at all" from "your search matched nothing"
+          <div className="bg-white border border-[#f2f4f7] rounded-2xl py-20 flex items-center justify-center">
+            <p className="text-[#9f9f9f]">No materials match &quot;{searchQuery}&quot;.</p>
+          </div>
         ) : (
-          <FullUploadsTable uploads={uploads} />
+          <FullUploadsTable uploads={filteredUploads} />
         )}
       </div>
     </main>

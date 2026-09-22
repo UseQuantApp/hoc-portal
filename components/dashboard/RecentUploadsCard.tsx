@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Plus, ArrowRight, Calendar } from "lucide-react";
 import Link from "next/link";
 import { apiFetch } from "@/lib/api";
+import { getCurrentAcademicSession } from "@/lib/academic";
 
 const columns = ["Document Title", "Courses", "Date"];
 
@@ -54,11 +55,13 @@ export default function RecentUploadsCard() {
         setIsLoading(true);
         setError("");
 
+        // CHANGED: session is now computed instead of hardcoded, so this doesn't silently
+        // under-count once the academic session rolls over
+        const session = getCurrentAcademicSession();
         const [firstRes, secondRes] = await Promise.all([
-          apiFetch("/documents/mine?session=2024/2025&semester=first"),
-          apiFetch("/documents/mine?session=2024/2025&semester=second"),
+          apiFetch(`/documents/mine?session=${session}&semester=first`),
+          apiFetch(`/documents/mine?session=${session}&semester=second`),
         ]);
-
         const combinedDocuments = [...(firstRes.data || []), ...(secondRes.data || [])];
         const seenIds = new Set<string>();
         const uniqueDocuments = combinedDocuments.filter((doc: DocumentFile) => {
