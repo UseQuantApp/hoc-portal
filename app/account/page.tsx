@@ -24,8 +24,6 @@ const badgeCategoryNames: Record<string, string> = {
 
 export default function AccountPage() {
   const router = useRouter();
-  // NEW: setPhotoUrl from shared context — pushes a selected photo to Navbar and
-  // every other screen reading useProfile(), the moment it's picked.
   const { setPhotoUrl } = useProfile();
   const [activeTab, setActiveTab] = useState("Overview");
   const [badgeFilter, setBadgeFilter] = useState<"All" | "Earned" | "Locked">("All");
@@ -57,8 +55,6 @@ export default function AccountPage() {
   const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null);
   const [photoError, setPhotoError] = useState("");
 
-  // NEW: Logout confirmation — shows "Log out of Quant?" before actually
-  // logging out, instead of logging out immediately on click.
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
@@ -80,7 +76,7 @@ export default function AccountPage() {
     setSelectedPhoto(selected);
     const previewUrl = URL.createObjectURL(selected);
     setPhotoPreviewUrl(previewUrl);
-    setPhotoUrl(previewUrl); // NEW: propagate to Navbar and everywhere else via context
+    setPhotoUrl(previewUrl); // propagate to Navbar and everywhere else via context
     // TODO: once /students/me/photo (or similar) exists, upload `selected` here
     // via apiFetchFormData instead of just previewing it locally.
   };
@@ -98,9 +94,14 @@ export default function AccountPage() {
     setConfirmPasswordInput("");
   };
 
+  // CHANGED: now also handles ?tab=settings (from the Navbar profile click),
+  // alongside the existing ?tab=activity handling.
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).get("tab") === "activity") {
+    const tab = new URLSearchParams(window.location.search).get("tab");
+    if (tab === "activity") {
       startTransition(() => setActiveTab("Notifications & Activity"));
+    } else if (tab === "settings") {
+      startTransition(() => setActiveTab("Account Settings"));
     }
   }, []);
 
@@ -212,7 +213,6 @@ export default function AccountPage() {
     }
   };
 
-  // CHANGED: now tracks isLoggingOut for the confirmation modal's button text.
   const handleLogout = async () => {
     setIsLoggingOut(true);
     await logoutStudent(router.push);
@@ -241,7 +241,6 @@ export default function AccountPage() {
             </button>
           ))}
           <div className="border-t border-[#ececec] mt-3 pt-3">
-            {/* CHANGED: opens the confirmation modal instead of logging out directly */}
             <button
               type="button"
               onClick={() => setShowLogoutConfirm(true)}
@@ -262,7 +261,6 @@ export default function AccountPage() {
                   <Pencil size={18} />
                 </button>
 
-                {/* CHANGED: falls back to InitialsAvatar when there's no photo yet */}
                 <div className="relative size-20 lg:size-24 rounded-full overflow-hidden shrink-0">
                   {photoPreviewUrl ? (
                     <Image src={photoPreviewUrl} alt="Profile avatar" fill className="object-cover" />
@@ -452,7 +450,6 @@ export default function AccountPage() {
               <div className="flex flex-col gap-4">
                 <p className="font-bold text-lg text-[#212121]">Profile Photo</p>
                 <div className="flex items-center gap-4 lg:gap-6">
-                  {/* CHANGED: falls back to InitialsAvatar when there's no photo yet */}
                   <div className="relative size-16 lg:size-20 rounded-full overflow-hidden shrink-0">
                     {photoPreviewUrl ? (
                       <Image src={photoPreviewUrl} alt="Profile avatar" fill className="object-cover" />
@@ -608,7 +605,6 @@ export default function AccountPage() {
         </div>
       )}
 
-      {/* NEW: Logout confirmation */}
       {showLogoutConfirm && (
         <LogoutConfirmModal
           onCancel={() => setShowLogoutConfirm(false)}

@@ -3,6 +3,8 @@
 import Image from "next/image";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { useProfile } from "@/context/ProfileContext";
+import InitialsAvatar from "@/components/shared/InitialsAvatar";
 
 export type Leader = {
   name: string;
@@ -11,14 +13,16 @@ export type Leader = {
   points: string;
   medal: string | null;
   rank?: number;
-  avatar: string;
+  avatar: string | null; // CHANGED: null means "no photo yet" — falls back to InitialsAvatar
   isYou: boolean;
 };
 
 export default function LeaderboardCard({ leaders = [], me }: { leaders?: Leader[]; me?: { rank: number; points: number } | null }) {
+  // NEW: pulls the logged-in user's own name/photo from context, for the synthesized "you" row below
+  const { fullName, photoUrl } = useProfile();
   const hasYouRanked = leaders.some((l) => l.isYou);
   const displayLeaders = me && !hasYouRanked
-    ? [...leaders, { name: "You", tier: `#${me.rank}`, materials: 0, points: me.points.toLocaleString(), medal: null, rank: me.rank, avatar: "/images/avatar-user.png", isYou: true }]
+    ? [...leaders, { name: fullName || "You", tier: `#${me.rank}`, materials: 0, points: me.points.toLocaleString(), medal: null, rank: me.rank, avatar: photoUrl, isYou: true }]
     : leaders;
 
   return (
@@ -51,8 +55,13 @@ export default function LeaderboardCard({ leaders = [], me }: { leaders?: Leader
     <span className="hidden lg:block w-[34px] text-center text-[#9f9f9f] shrink-0">–</span>
   )}
   <div className="flex items-center gap-2 lg:gap-4 min-w-0">
-    <div className="relative size-[44px] lg:size-[86px] rounded-full overflow-hidden bg-[#d9d9d9] shrink-0">
-      <Image src={leader.avatar} alt={leader.name} fill className="object-cover" />
+    {/* CHANGED: falls back to InitialsAvatar when there's no photo */}
+    <div className="relative size-[44px] lg:size-[86px] rounded-full overflow-hidden shrink-0">
+      {leader.avatar ? (
+        <Image src={leader.avatar} alt={leader.name} fill className="object-cover" />
+      ) : (
+        <InitialsAvatar name={leader.name} className="size-full text-lg lg:text-3xl" />
+      )}
     </div>
     <div className="flex flex-col gap-1 lg:gap-2 min-w-0">
       <p
@@ -99,7 +108,7 @@ export default function LeaderboardCard({ leaders = [], me }: { leaders?: Leader
           <div className="bg-[#fff8f4] border-t-2 border-dashed border-[#ffd0aa] flex items-center gap-2 lg:gap-4 px-3 lg:px-6 py-3 lg:py-4">
             <span className="w-5 lg:w-8 text-center text-[#9f9f9f] text-xs lg:text-sm shrink-0">–</span>
             <div className="flex-1 flex flex-col gap-1.5 lg:gap-3.5 min-w-0">
-              <p className="font-bold text-sm lg:text-xl text-[#212121]">Akorede (you)</p>
+              <p className="font-bold text-sm lg:text-xl text-[#212121]">{fullName ? `${fullName} (you)` : "You"}</p>
               <p className="text-xs lg:text-sm text-[#9f9f9f] truncate">Upload your first material to claim your spot</p>
             </div>
             <p className="text-xs lg:text-sm text-[#9f9f9f] shrink-0">No rank yet</p>

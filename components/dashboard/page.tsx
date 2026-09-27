@@ -14,7 +14,6 @@ import { dedupeDocuments } from "@/lib/documents";
 
 type PointsSummary = { points: number; tokens: number; lifetimePointsEarned: number; uploadStreakDays: number };
 
-// NEW: matches the Badge schema from GET /badges/mine
 type Badge = {
   id: string;
   key: string;
@@ -34,7 +33,6 @@ export default function DashboardPage() {
   const [leaders, setLeaders] = useState<Leader[]>([]);
   const [leaderboardMe, setLeaderboardMe] = useState<{ rank: number; points: number } | null>(null);
   const [totalUploaded, setTotalUploaded] = useState(0);
-  // NEW: badges state, fed to PointsProgressCard
   const [badges, setBadges] = useState<Badge[]>([]);
 
   useEffect(() => {
@@ -54,7 +52,6 @@ export default function DashboardPage() {
     async function loadDashboardData() {
       try {
         const session = getCurrentAcademicSession();
-        // NEW: added /badges/mine alongside the existing calls
         const [pointsResponse, historyResponse, leaderboardResponse, firstDocsResponse, secondDocsResponse, badgesResponse] = await Promise.all([
           apiFetch("/points/mine"),
           apiFetch("/points/mine/history"),
@@ -70,7 +67,6 @@ export default function DashboardPage() {
         const allDocs = dedupeDocuments([...(firstDocsResponse.data || []), ...(secondDocsResponse.data || [])]);
         setTotalUploaded(allDocs.length);
 
-        // NEW: store badges from the new endpoint
         setBadges(badgesResponse.data ?? badgesResponse);
 
         const leaderboard = leaderboardResponse.data ?? leaderboardResponse;
@@ -82,7 +78,10 @@ export default function DashboardPage() {
           points: entry.points.toLocaleString(),
           medal: entry.rank <= 3 ? `/images/medal-${entry.rank === 1 ? "gold" : entry.rank === 2 ? "silver" : "bronze"}.svg` : null,
           rank: entry.rank,
-          avatar: "/images/avatar-user.png",
+          // CHANGED: no photo field exists on LeaderboardEntry yet — null lets
+          // LeaderboardCard fall back to each person's InitialsAvatar instead
+          // of the old default silhouette image.
+          avatar: null,
           isYou: leaderboard.me?.rank === entry.rank,
         })));
       } catch (err) {

@@ -86,8 +86,8 @@ export default function Navbar({ searchQuery, onSearchChange }: NavbarProps) {
           >
             <Menu size={20} />
           </button>
-          {/* CHANGED: now a Link to /account, so clicking the profile takes you to the Account page */}
-          <Link href="/account" className="hidden lg:flex items-center gap-2.5">
+          {/* CHANGED: profile click now goes straight to Account Settings tab */}
+          <Link href="/account?tab=settings" className="hidden lg:flex items-center gap-2.5">
             <div className="relative size-12 rounded-lg border border-[#212121] overflow-hidden">
               {photoUrl ? (
                 <Image src={photoUrl} alt={fullName || "Profile"} fill className="object-cover" />
@@ -124,9 +124,9 @@ export default function Navbar({ searchQuery, onSearchChange }: NavbarProps) {
               </button>
             </div>
 
-            {/* CHANGED: also a Link to /account, and closes the menu on tap */}
+            {/* CHANGED: same tab=settings jump on mobile */}
             <Link
-              href="/account"
+              href="/account?tab=settings"
               onClick={() => setIsMenuOpen(false)}
               className="mt-6 flex items-center gap-3 border-b border-[#ececec] pb-5"
             >
