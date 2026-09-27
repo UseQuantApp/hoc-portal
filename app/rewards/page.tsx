@@ -65,6 +65,14 @@ export default function RewardsPage() {
       .finally(() => setIsLoading(false));
   }, []);
 
+  // NEW: merchandise rewards (journal, t-shirt, hoodie) can only be redeemed once.
+  // Cross-references successful past redemptions against the catalog.
+  const alreadyRedeemedMerchandiseIds = new Set(
+    history
+      .filter((entry) => entry.status === "success" && entry.reward?.type === "merchandise")
+      .map((entry) => entry.reward._id)
+  );
+
   const handleRedeem = async (reward: Reward) => {
     const size = selectedSizes[reward._id];
     if (reward.requiresSize && !size) return;
@@ -108,46 +116,51 @@ export default function RewardsPage() {
 
       {!isLoading && rewards.length > 0 && (
         <div className="w-full max-w-[1312px] grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {rewards.map((reward) => (
-            <div key={reward._id} className="bg-white border border-[#f1e9e9] rounded-2xl overflow-hidden flex flex-col p-3.5 gap-6">
-              <div className="relative h-[180px] rounded-2xl overflow-hidden bg-[#eff7ff]">
-                <span className="absolute top-3 right-3 z-10 bg-white text-xs font-bold text-[#f60] px-3 py-1.5 rounded-full">
-                  {reward.pointsCost} points
-                </span>
-                <Image
-                  src={getRewardImage(reward)}
-                  alt={reward.name}
-                  fill
-                  className="object-cover"
-                />
-              </div>
-              <div className="flex flex-col gap-4 px-4 flex-1">
-                <p className="font-bold text-lg lg:text-2xl text-[#212121] lowercase">{reward.name}</p>
-                <p className="text-sm lg:text-lg text-[#747474] lowercase flex-1">{reward.description}</p>
-                {reward.requiresSize && (
-                  <select
-                    value={selectedSizes[reward._id] || ""}
-                    onChange={(e) => setSelectedSizes((current) => ({ ...current, [reward._id]: e.target.value }))}
-                    className="border border-[#e5e5e5] rounded-lg p-2 text-sm"
+          {rewards.map((reward) => {
+            // NEW: merchandise rewards already redeemed once are locked from further redemption
+            const isClaimed = reward.type === "merchandise" && alreadyRedeemedMerchandiseIds.has(reward._id);
+
+            return (
+              <div key={reward._id} className="bg-white border border-[#f1e9e9] rounded-2xl overflow-hidden flex flex-col p-3.5 gap-6">
+                <div className="relative h-[180px] rounded-2xl overflow-hidden bg-[#eff7ff]">
+                  <span className="absolute top-3 right-3 z-10 bg-white text-xs font-bold text-[#f60] px-3 py-1.5 rounded-full">
+                    {reward.pointsCost} points
+                  </span>
+                  <Image
+                    src={getRewardImage(reward)}
+                    alt={reward.name}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+                <div className="flex flex-col gap-4 px-4 flex-1">
+                  <p className="font-bold text-lg lg:text-2xl text-[#212121] lowercase">{reward.name}</p>
+                  <p className="text-sm lg:text-lg text-[#747474] lowercase flex-1">{reward.description}</p>
+                  {reward.requiresSize && !isClaimed && (
+                    <select
+                      value={selectedSizes[reward._id] || ""}
+                      onChange={(e) => setSelectedSizes((current) => ({ ...current, [reward._id]: e.target.value }))}
+                      className="border border-[#e5e5e5] rounded-lg p-2 text-sm"
+                    >
+                      <option value="">Select size</option>
+                      {(reward.sizes || []).map((size) => (
+                        <option key={size} value={size}>
+                          {size}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                  <button
+                    onClick={() => handleRedeem(reward)}
+                    disabled={isClaimed || (reward.requiresSize && !selectedSizes[reward._id])}
+                    className="w-full bg-[#006dff] disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm lg:text-lg py-3 lg:py-5 rounded-xl"
                   >
-                    <option value="">Select size</option>
-                    {(reward.sizes || []).map((size) => (
-                      <option key={size} value={size}>
-                        {size}
-                      </option>
-                    ))}
-                  </select>
-                )}
-                <button
-                  onClick={() => handleRedeem(reward)}
-                  disabled={reward.requiresSize && !selectedSizes[reward._id]}
-                  className="w-full bg-[#006dff] disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm lg:text-lg py-3 lg:py-5 rounded-xl"
-                >
-                  Redeem Reward
-                </button>
+                    {isClaimed ? "Already Claimed" : "Redeem Reward"}
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 

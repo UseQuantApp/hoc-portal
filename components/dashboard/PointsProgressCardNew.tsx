@@ -90,7 +90,7 @@ export default function PointsProgressCard({
         <Stat label="Tokens" value={tokens.toLocaleString()} />
         <Stat label="Upload streak" value={`${uploadStreakDays} days`} />
 
-        {/* TEMPORARY: hiding the whole badge row per request — uncomment to bring it back
+      
         <div className="flex items-center justify-between gap-3 lg:gap-6 border-l border-[#e5e5e5] pl-4 lg:pl-8 flex-1 min-w-0">
           {sortedBadges.length === 0 ? (
             <p className="text-xs lg:text-sm text-[#9f9f9f] px-2">Loading badges...</p>
@@ -152,7 +152,7 @@ export default function PointsProgressCard({
             })
           )}
         </div>
-        */}
+        
       </div>
     </div>
   );

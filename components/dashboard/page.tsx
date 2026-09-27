@@ -10,20 +10,32 @@ import RecentUploadsCard from "@/components/dashboard/RecentUploadsCard";
 import LeaderboardCard from "@/components/dashboard/LeaderboardCard";
 import RecentWinsCard, { type PointsTransaction } from "@/components/dashboard/RecentWinsCard";
 import type { Leader } from "@/components/dashboard/LeaderboardCard";
+import { dedupeDocuments } from "@/lib/documents";
 
 type PointsSummary = { points: number; tokens: number; lifetimePointsEarned: number; uploadStreakDays: number };
+
+// NEW: matches the Badge schema from GET /badges/mine
+type Badge = {
+  id: string;
+  key: string;
+  name: string;
+  description: string;
+  category: string;
+  tier: "bronze" | "silver" | "gold" | "platinum" | "diamond" | "obsidian";
+  points: number;
+  earned: boolean;
+  earnedAt: string | null;
+};
 
 export default function DashboardPage() {
   const [fullName, setFullName] = useState("");
   const [points, setPoints] = useState<PointsSummary>({ points: 0, tokens: 0, lifetimePointsEarned: 0, uploadStreakDays: 0 });
   const [history, setHistory] = useState<PointsTransaction[]>([]);
   const [leaders, setLeaders] = useState<Leader[]>([]);
-  // CHANGED: back to the simple shape LeaderboardCard actually expects — materialsUploaded
-  // is no longer sourced from here, so it doesn't need to live on this type anymore
   const [leaderboardMe, setLeaderboardMe] = useState<{ rank: number; points: number } | null>(null);
-  // NEW: real upload count, same approach as app/account/page.tsx — counts actual
-  // documents from /documents/mine instead of trusting the leaderboard's aggregate
   const [totalUploaded, setTotalUploaded] = useState(0);
+  // NEW: badges state, fed to PointsProgressCard
+  const [badges, setBadges] = useState<Badge[]>([]);
 
   useEffect(() => {
     async function loadUser() {
@@ -41,23 +53,25 @@ export default function DashboardPage() {
   useEffect(() => {
     async function loadDashboardData() {
       try {
-        // CHANGED: session computed instead of hardcoded, and two /documents/mine calls
-        // added alongside the existing three, mirroring app/account/page.tsx exactly
         const session = getCurrentAcademicSession();
-        const [pointsResponse, historyResponse, leaderboardResponse, firstDocsResponse, secondDocsResponse] = await Promise.all([
+        // NEW: added /badges/mine alongside the existing calls
+        const [pointsResponse, historyResponse, leaderboardResponse, firstDocsResponse, secondDocsResponse, badgesResponse] = await Promise.all([
           apiFetch("/points/mine"),
           apiFetch("/points/mine/history"),
           apiFetch("/leaderboard?limit=20"),
           apiFetch(`/documents/mine?session=${session}&semester=first`),
           apiFetch(`/documents/mine?session=${session}&semester=second`),
+          apiFetch("/badges/mine"),
         ]);
         const summary = pointsResponse.data ?? pointsResponse;
         setPoints(summary);
         setHistory(historyResponse.data ?? historyResponse);
 
-        // NEW: real total, counted the same way the account page counts it
-        const allDocs = [...(firstDocsResponse.data || []), ...(secondDocsResponse.data || [])];
+        const allDocs = dedupeDocuments([...(firstDocsResponse.data || []), ...(secondDocsResponse.data || [])]);
         setTotalUploaded(allDocs.length);
+
+        // NEW: store badges from the new endpoint
+        setBadges(badgesResponse.data ?? badgesResponse);
 
         const leaderboard = leaderboardResponse.data ?? leaderboardResponse;
         setLeaderboardMe(leaderboard.me);
@@ -84,17 +98,7 @@ export default function DashboardPage() {
         <Navbar />
       </div>
 
-      {/* <div className="w-full max-w-[1312px] flex flex-row items-center gap-4">
-        <div className="bg-white flex-1 rounded-xl p-3 lg:p-4 flex items-center gap-2.5">
-          <input
-            placeholder="Search materials, courses..."
-            className="w-full text-sm lg:text-lg text-[#212121] placeholder:text-[#21212180] outline-none bg-transparent"
-          />
-        </div>
-      </div> */}
-
       <div className="w-full max-w-[1312px] flex flex-col gap-10">
-        {/* CHANGED: totalUploaded now comes from the new state above, not leaderboardMe */}
         <PointsProgressCard
           totalUploaded={totalUploaded}
           pointsEarned={points.points}
@@ -102,6 +106,7 @@ export default function DashboardPage() {
           uploadStreakDays={points.uploadStreakDays}
           fullName={fullName}
           pointsData={points}
+          badges={badges}
         />
         <section className="bg-white border border-[#f2f4f7] rounded-2xl p-5">
           <p className="font-bold text-lg text-[#212121]">Points History</p>

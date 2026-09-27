@@ -56,7 +56,16 @@ export default function FullUploadsTable({ uploads }: { uploads: Upload[] }) {
                   <button type="button" aria-label={`Open ${upload.title}`} className="text-[#212121]" onClick={() => window.open(upload.fileUrl, "_blank", "noopener,noreferrer")}>
                     <ExternalLink size={18} />
                   </button>
-                  <button type="button" aria-label={`Edit ${upload.title}`} className="text-[#006dff]"><Pencil size={18} /></button>
+                  {/* CHANGED: disabled — no student-facing edit endpoint exists yet (PATCH /documents/{id} is admin-only) */}
+                  <button
+                    type="button"
+                    aria-label={`Edit ${upload.title}`}
+                    title="Editing uploads isn't available yet"
+                    disabled
+                    className="text-[#9f9f9f] cursor-not-allowed"
+                  >
+                    <Pencil size={18} />
+                  </button>
                 </div>
               </div>
             </div>
@@ -111,7 +120,14 @@ export default function FullUploadsTable({ uploads }: { uploads: Upload[] }) {
                 >
                   <ExternalLink size={20} />
                 </button>
-                <button className="text-[#006dff]">
+                {/* CHANGED: disabled — no student-facing edit endpoint exists yet (PATCH /documents/{id} is admin-only) */}
+                <button
+                  type="button"
+                  aria-label={`Edit ${upload.title}`}
+                  title="Editing uploads isn't available yet"
+                  disabled
+                  className="text-[#9f9f9f] cursor-not-allowed"
+                >
                   <Pencil size={20} />
                 </button>
               </div>

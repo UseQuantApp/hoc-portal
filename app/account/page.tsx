@@ -9,6 +9,8 @@ import { LogOut, Pencil, Coins, TrendingUp, ChevronDown, ChevronRight, X, Upload
 import { apiFetch } from "@/lib/api";
 import { logoutStudent } from "@/lib/auth";
 import { getCurrentAcademicSession } from "@/lib/academic";
+import { useProfile } from "@/context/ProfileContext";
+import InitialsAvatar from "@/components/shared/InitialsAvatar";
 
 const sidebarItems = ["Overview", "Badges & Achievements", "Notifications & Activity", "Account Settings"];
 
@@ -22,6 +24,9 @@ const badgeCategoryNames: Record<string, string> = {
 
 export default function AccountPage() {
   const router = useRouter();
+  // NEW: setPhotoUrl from shared context — pushes a selected photo to Navbar and
+  // every other screen reading useProfile(), the moment it's picked.
+  const { setPhotoUrl } = useProfile();
   const [activeTab, setActiveTab] = useState("Overview");
   const [badgeFilter, setBadgeFilter] = useState<"All" | "Earned" | "Locked">("All");
 
@@ -73,7 +78,9 @@ export default function AccountPage() {
 
     setPhotoError("");
     setSelectedPhoto(selected);
-    setPhotoPreviewUrl(URL.createObjectURL(selected));
+    const previewUrl = URL.createObjectURL(selected);
+    setPhotoPreviewUrl(previewUrl);
+    setPhotoUrl(previewUrl); // NEW: propagate to Navbar and everywhere else via context
     // TODO: once /students/me/photo (or similar) exists, upload `selected` here
     // via apiFetchFormData instead of just previewing it locally.
   };
@@ -255,8 +262,13 @@ export default function AccountPage() {
                   <Pencil size={18} />
                 </button>
 
-                <div className="relative size-20 lg:size-24 rounded-full overflow-hidden bg-[#d9d9d9] shrink-0">
-                  <Image src={photoPreviewUrl || "/images/avatar-user.png"} alt="Profile avatar" fill className="object-cover" />
+                {/* CHANGED: falls back to InitialsAvatar when there's no photo yet */}
+                <div className="relative size-20 lg:size-24 rounded-full overflow-hidden shrink-0">
+                  {photoPreviewUrl ? (
+                    <Image src={photoPreviewUrl} alt="Profile avatar" fill className="object-cover" />
+                  ) : (
+                    <InitialsAvatar name={`${surname} ${otherName}`.trim()} className="size-20 lg:size-24 rounded-full text-2xl lg:text-3xl" />
+                  )}
                 </div>
 
                 <div className="flex flex-col gap-3 flex-1">
@@ -440,13 +452,13 @@ export default function AccountPage() {
               <div className="flex flex-col gap-4">
                 <p className="font-bold text-lg text-[#212121]">Profile Photo</p>
                 <div className="flex items-center gap-4 lg:gap-6">
-                  <div className="relative size-16 lg:size-20 rounded-full overflow-hidden bg-[#d9d9d9] shrink-0">
-                    <Image
-                      src={photoPreviewUrl || "/images/avatar-user.png"}
-                      alt="Profile avatar"
-                      fill
-                      className="object-cover"
-                    />
+                  {/* CHANGED: falls back to InitialsAvatar when there's no photo yet */}
+                  <div className="relative size-16 lg:size-20 rounded-full overflow-hidden shrink-0">
+                    {photoPreviewUrl ? (
+                      <Image src={photoPreviewUrl} alt="Profile avatar" fill className="object-cover" />
+                    ) : (
+                      <InitialsAvatar name={`${surname} ${otherName}`.trim()} className="size-16 lg:size-20 rounded-full text-xl lg:text-2xl" />
+                    )}
                   </div>
                   <div className="flex flex-col gap-2">
                     <label className="w-fit cursor-pointer bg-white border border-[#f6a86b] text-[#b64a03] text-sm font-bold px-4 py-2 rounded-lg flex items-center gap-2">

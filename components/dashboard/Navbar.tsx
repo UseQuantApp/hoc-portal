@@ -4,9 +4,10 @@ import Image from "next/image";
 import { Bell, Menu, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { apiFetch } from "@/lib/api";
+import { useState } from "react";
 import { logoutStudent } from "@/lib/auth";
+import { useProfile } from "@/context/ProfileContext";
+import InitialsAvatar from "@/components/shared/InitialsAvatar";
 import PageFilters from "@/components/dashboard/PageFilters";
 import LogoutConfirmModal from "@/components/dashboard/LogoutConfirmModal";
 
@@ -27,22 +28,10 @@ type NavbarProps = {
 export default function Navbar({ searchQuery, onSearchChange }: NavbarProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const [fullName, setFullName] = useState("");
+  const { fullName, photoUrl } = useProfile();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-
-  useEffect(() => {
-    async function loadUser() {
-      try {
-        const res = await apiFetch("/students/me");
-        setFullName(res.data.fullName || "");
-      } catch (err) {
-        console.error("Failed to load user for navbar:", err);
-      }
-    }
-    loadUser();
-  }, []);
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -97,15 +86,20 @@ export default function Navbar({ searchQuery, onSearchChange }: NavbarProps) {
           >
             <Menu size={20} />
           </button>
-          <div className="hidden lg:flex items-center gap-2.5">
-            <div className="relative size-12 rounded-lg border border-[#212121] overflow-hidden bg-[#d9d9d9]">
-              <Image src="/images/avatar-user.png" alt="Akorede" fill className="object-cover" />
+          {/* CHANGED: now a Link to /account, so clicking the profile takes you to the Account page */}
+          <Link href="/account" className="hidden lg:flex items-center gap-2.5">
+            <div className="relative size-12 rounded-lg border border-[#212121] overflow-hidden">
+              {photoUrl ? (
+                <Image src={photoUrl} alt={fullName || "Profile"} fill className="object-cover" />
+              ) : (
+                <InitialsAvatar name={fullName} className="size-12 rounded-lg text-lg" />
+              )}
             </div>
             <div>
               <p className="font-bold text-lg text-[#212121]">{fullName || "..."}</p>
               <p className="text-sm text-[#212121]">Campus Scholar</p>
             </div>
-          </div>
+          </Link>
         </div>
       </div>
       {isMenuOpen && (
@@ -130,15 +124,24 @@ export default function Navbar({ searchQuery, onSearchChange }: NavbarProps) {
               </button>
             </div>
 
-            <div className="mt-6 flex items-center gap-3 border-b border-[#ececec] pb-5">
-              <div className="relative size-12 shrink-0 overflow-hidden rounded-lg border border-[#212121] bg-[#d9d9d9]">
-                <Image src="/images/avatar-user.png" alt="" fill className="object-cover" />
+            {/* CHANGED: also a Link to /account, and closes the menu on tap */}
+            <Link
+              href="/account"
+              onClick={() => setIsMenuOpen(false)}
+              className="mt-6 flex items-center gap-3 border-b border-[#ececec] pb-5"
+            >
+              <div className="relative size-12 shrink-0 overflow-hidden rounded-lg border border-[#212121]">
+                {photoUrl ? (
+                  <Image src={photoUrl} alt={fullName || "Profile"} fill className="object-cover" />
+                ) : (
+                  <InitialsAvatar name={fullName} className="size-12 rounded-lg text-lg" />
+                )}
               </div>
               <div>
                 <p className="font-bold text-base text-[#212121]">{fullName || "..."}</p>
                 <p className="text-sm text-[#212121]">Campus Scholar</p>
               </div>
-            </div>
+            </Link>
 
             <nav className="mt-5 flex flex-col gap-2">
               {mobileNavItems.map((item) => {
