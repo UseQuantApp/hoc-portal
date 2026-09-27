@@ -15,7 +15,7 @@ export default function LogoutConfirmModal({ onCancel, onConfirm, isLoggingOut =
       <div className="flex flex-col items-center text-center max-w-[360px] w-full gap-6">
         <div className="flex items-center gap-2">
           <div className="relative w-7 h-7">
-            <Image src="/images/logo-icon.png" alt="Quant logo" fill className="object-contain" />
+              <Image src="/images/logo-icon.png" alt="Quant logo" fill className="object-contain" sizes="40px" />
           </div>
           <span className="text-2xl font-medium text-[#212121]">Quant</span>
         </div>

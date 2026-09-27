@@ -117,7 +117,7 @@ export default function PointsProgressCard({
               if (isCurrent) {
                 return (
                   <div key={badge.id} className="relative shrink-0 size-[90px] lg:size-[130px] flex flex-col items-center justify-center">
-                    <Image src="/images/progress-ring.svg" alt="" fill className="object-contain" />
+                    <Image src="/images/progress-ring.svg" alt="" fill className="object-contain"/>
                     <div className="absolute top-3 lg:top-5">{badgeIcon}</div>
                     <p className="text-xs lg:text-base font-bold text-[#212121] mt-8 lg:mt-11">
                       {badge.points.toLocaleString()}

@@ -44,7 +44,7 @@ export default function Navbar({ searchQuery, onSearchChange }: NavbarProps) {
         <div className="flex flex-col lg:flex-row lg:items-center gap-1 lg:gap-8">
           <div className="flex items-center gap-2">
             <div className="relative w-6 h-6 lg:w-8 lg:h-8">
-              <Image src="/images/logo-icon.png" alt="Quant logo" fill className="object-contain" />
+              <Image src="/images/logo-icon.png" alt="Quant logo" fill className="object-contain" sizes="40px" />
             </div>
             <span className="text-xl lg:text-3xl font-medium text-[#212121]">Quant</span>
           </div>
