@@ -30,8 +30,6 @@ type RewardRedemption = {
   createdAt: string;
 };
 
-// Matches by name keyword first (more resilient to unknown `key` slugs), falls
-// back to a generic image per `type` if a reward's name doesn't match anything.
 function getRewardImage(reward: Reward): string {
   const name = reward.name.toLowerCase();
   if (name.includes("token")) return "/images/rewards/coin-token.png";
@@ -65,8 +63,6 @@ export default function RewardsPage() {
       .finally(() => setIsLoading(false));
   }, []);
 
-  // NEW: merchandise rewards (journal, t-shirt, hoodie) can only be redeemed once.
-  // Cross-references successful past redemptions against the catalog.
   const alreadyRedeemedMerchandiseIds = new Set(
     history
       .filter((entry) => entry.status === "success" && entry.reward?.type === "merchandise")
@@ -117,7 +113,6 @@ export default function RewardsPage() {
       {!isLoading && rewards.length > 0 && (
         <div className="w-full max-w-[1312px] grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {rewards.map((reward) => {
-            // NEW: merchandise rewards already redeemed once are locked from further redemption
             const isClaimed = reward.type === "merchandise" && alreadyRedeemedMerchandiseIds.has(reward._id);
 
             return (
@@ -164,7 +159,8 @@ export default function RewardsPage() {
         </div>
       )}
 
-      <section className="w-full max-w-[1312px] bg-white border border-[#f2f4f7] rounded-2xl p-5 flex flex-col gap-4">
+      {/* CHANGED: added id="history" so /rewards#history scrolls straight here */}
+      <section id="history" className="w-full max-w-[1312px] bg-white border border-[#f2f4f7] rounded-2xl p-5 flex flex-col gap-4">
         <div>
           <p className="font-bold text-lg text-[#212121]">Redemption History</p>
           <p className="text-sm text-[#9f9f9f] mt-1">

@@ -3,6 +3,7 @@
 import { startTransition, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import Link from "next/link";
 import Navbar from "@/components/dashboard/Navbar";
 import LogoutConfirmModal from "@/components/dashboard/LogoutConfirmModal";
 import { LogOut, Pencil, Coins, TrendingUp, ChevronDown, ChevronRight, X, Upload } from "lucide-react";
@@ -44,13 +45,11 @@ export default function AccountPage() {
   const [materialsUploaded, setMaterialsUploaded] = useState(0);
   const [documentsDelivered, setDocumentsDelivered] = useState(0);
 
-  // Change Password modal — non-functional for now, see NOTE further down.
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [currentPasswordInput, setCurrentPasswordInput] = useState("");
   const [newPasswordInput, setNewPasswordInput] = useState("");
   const [confirmPasswordInput, setConfirmPasswordInput] = useState("");
 
-  // CHANGED: profile photo is now actually uploaded via PATCH /students/me/photo
   const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
   const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null);
   const [photoError, setPhotoError] = useState("");
@@ -63,7 +62,7 @@ export default function AccountPage() {
     const selected = e.target.files?.[0];
     if (!selected) return;
 
-    const allowedTypes = ["image/jpeg", "image/png", "image/webp"]; // matches what the backend accepts
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
     if (!allowedTypes.includes(selected.type)) {
       setPhotoError("Please choose a JPG, PNG, or WebP file.");
       return;
@@ -76,8 +75,8 @@ export default function AccountPage() {
     setPhotoError("");
     setSelectedPhoto(selected);
     const previewUrl = URL.createObjectURL(selected);
-    setPhotoPreviewUrl(previewUrl); // instant local preview while upload is in flight
-    setPhotoUrl(previewUrl); // propagate the instant preview to Navbar etc.
+    setPhotoPreviewUrl(previewUrl);
+    setPhotoUrl(previewUrl);
 
     setIsUploadingPhoto(true);
     try {
@@ -85,12 +84,10 @@ export default function AccountPage() {
       formData.append("photo", selected);
       const response = await apiFetchFormData("/students/me/photo", formData, "PATCH");
       const updatedStudent = response.data ?? response;
-      // swap the local blob preview for the real, permanent server URL
       setPhotoPreviewUrl(updatedStudent.photoUrl);
       setPhotoUrl(updatedStudent.photoUrl);
     } catch (err) {
       setPhotoError(err instanceof Error ? err.message : "Failed to upload photo.");
-      // roll back to no-photo state on failure
       setPhotoPreviewUrl(null);
       setPhotoUrl(null);
       setSelectedPhoto(null);
@@ -141,7 +138,6 @@ export default function AccountPage() {
         setDept(student.department || "");
         setSettingsLevel(student.level || "");
         setEmail(student.email || "");
-        // NEW: pick up a photo already saved on the server (e.g. after a page refresh)
         if (student.photoUrl) {
           setPhotoPreviewUrl(student.photoUrl);
         }
@@ -372,13 +368,14 @@ export default function AccountPage() {
                     </div>
                   </div>
 
+                  {/* CHANGED: both now link to the real rewards page — "Reward History" jumps straight to its history section */}
                   <div className="flex flex-col lg:flex-row gap-3">
-                    <button className="bg-[#006dff] text-white text-sm font-bold py-3 rounded-xl flex-1">
+                    <Link href="/rewards" className="bg-[#006dff] text-white text-sm font-bold py-3 rounded-xl flex-1 text-center">
                       Redeem Rewards
-                    </button>
-                    <button className="bg-white border border-[#e5e5e5] text-[#212121] text-sm py-3 rounded-xl flex-1">
+                    </Link>
+                    <Link href="/rewards#history" className="bg-white border border-[#e5e5e5] text-[#212121] text-sm py-3 rounded-xl flex-1 text-center">
                       Reward History
-                    </button>
+                    </Link>
                   </div>
                 </div>
               </div>
