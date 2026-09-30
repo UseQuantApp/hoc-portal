@@ -22,11 +22,26 @@ type CourseValue =
   | null
   | undefined;
 
+// NEW: matches the Validation shape from the DocumentFile schema
+type ValidationFlag = {
+  type: "POTENTIAL_DUPLICATE" | "POOR_SCAN_QUALITY" | "POSSIBLE_SPLIT_UPLOAD_PATTERN";
+  reason?: string;
+  matchedDocumentId?: string;
+  score?: number;
+};
+
+type Validation = {
+  status: "pending" | "clear" | "flagged" | "manual_required";
+  flags?: ValidationFlag[];
+  checkedAt?: string;
+};
+
 type DocumentFile = {
   _id: string;
   course: CourseValue;
   title: string;
   fileUrl: string;
+  thumbnailUrl?: string | null; // NEW
   fileType: string;
   sizeBytes: number;
   tags: string[];
@@ -34,25 +49,27 @@ type DocumentFile = {
   uploadedByType: string;
   uploadedBy: string;
   createdAt?: string;
+  validation?: Validation | null; // NEW
 };
 
 type Upload = {
   id: string;
   title: string;
   fileUrl: string;
+  thumbnailUrl?: string | null; // NEW
   size: string;
   type: string;
   course: string;
   date: string;
   status: string;
   pointsAwarded: number | null;
+  validation?: Validation | null; // NEW
 };
 
 export default function UploadsPage() {
   const [uploads, setUploads] = useState<Upload[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>("");
-  // NEW: search value, now owned by this page instead of living only inside PageFilters
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
@@ -60,7 +77,6 @@ export default function UploadsPage() {
       try {
         setIsLoading(true);
         setError("");
-        // CHANGED: session computed instead of hardcoded to "2024/2025"
         const session = getCurrentAcademicSession();
         const [firstRes, secondRes] = await Promise.all([
           apiFetch(`/documents/mine?session=${session}&semester=first`),
@@ -81,12 +97,14 @@ export default function UploadsPage() {
             id: doc._id,
             title: doc.title,
             fileUrl: doc.fileUrl,
+            thumbnailUrl: doc.thumbnailUrl ?? null, // NEW
             size: `${(doc.sizeBytes / 1024 / 1024).toFixed(1)} MB`,
             type: doc.fileType.toLowerCase().replace(".", "") || "pdf",
             course: courseName,
             date: doc.createdAt ? new Date(doc.createdAt).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
             status: typeof doc.status === "string" ? doc.status.toLowerCase() : "pending",
             pointsAwarded: typeof doc.pointsAwarded === "number" ? doc.pointsAwarded : doc.pointsAwarded == null ? null : Number(doc.pointsAwarded),
+            validation: doc.validation ?? null, // NEW
           };
         });
 
@@ -102,8 +120,6 @@ export default function UploadsPage() {
     fetchUploads();
   }, []);
 
-  // NEW: filters your own uploads by title or course name as you type in the navbar search box.
-  // Case-insensitive, matches either field. Only applies once uploads have loaded.
   const trimmedQuery = searchQuery.trim().toLowerCase();
   const filteredUploads = trimmedQuery
     ? uploads.filter(
@@ -116,7 +132,6 @@ export default function UploadsPage() {
   return (
     <main className="min-h-screen bg-[#fbfbfb] flex flex-col items-center gap-6 lg:gap-8 px-4 md:px-16 py-6 lg:py-8">
       <div className="w-full max-w-[1312px]">
-        {/* CHANGED: passes search state down through Navbar to PageFilters */}
         <Navbar searchQuery={searchQuery} onSearchChange={setSearchQuery} />
       </div>
 
@@ -154,7 +169,6 @@ export default function UploadsPage() {
             </div>
           </div>
         ) : filteredUploads.length === 0 ? (
-          // NEW: distinguishes "you have zero uploads at all" from "your search matched nothing"
           <div className="bg-white border border-[#f2f4f7] rounded-2xl py-20 flex items-center justify-center">
             <p className="text-[#9f9f9f]">No materials match &quot;{searchQuery}&quot;.</p>
           </div>

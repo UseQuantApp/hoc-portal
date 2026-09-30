@@ -1,10 +1,11 @@
 import Image from "next/image";
-import { Calendar, Clock, CheckCircle2, XCircle, ExternalLink, Pencil } from "lucide-react";
+import { Calendar, Clock, CheckCircle2, XCircle, ExternalLink, Pencil, AlertTriangle, ShieldAlert } from "lucide-react";
 
 const columns = ["Document Title", "Courses", "Date", "Status", "Points"];
 
 const fileIcons: Record<string, string> = {
   doc: "/images/file-icon-word.png",
+  docx: "/images/file-icon-word.png",
   pdf: "/images/file-icon-pdf.png",
   pptx: "/images/file-icon-pptx.png",
 };
@@ -16,16 +17,39 @@ const statusStyles: Record<string, { bg: string; text: string; icon: React.React
   "—": { bg: "bg-[#f3f4f6]", text: "text-[#6b7280]", icon: null },
 };
 
+// NEW: validation status → label + color, shown as a small secondary badge
+const validationStyles: Record<string, { label: string; bg: string; text: string; icon: React.ReactNode } | null> = {
+  pending: null, // still being checked — no badge yet, avoids noise
+  clear: null, // passed checks — no badge needed, this is the default good state
+  flagged: { label: "Flagged", bg: "bg-[#fff1e0]", text: "text-[#b45a00]", icon: <AlertTriangle size={11} /> },
+  manual_required: { label: "Needs review", bg: "bg-[#ffe2e2]", text: "text-[#9f0712]", icon: <ShieldAlert size={11} /> },
+};
+
+type ValidationFlag = {
+  type: "POTENTIAL_DUPLICATE" | "POOR_SCAN_QUALITY" | "POSSIBLE_SPLIT_UPLOAD_PATTERN";
+  reason?: string;
+  matchedDocumentId?: string;
+  score?: number;
+};
+
+type Validation = {
+  status: "pending" | "clear" | "flagged" | "manual_required";
+  flags?: ValidationFlag[];
+  checkedAt?: string;
+};
+
 type Upload = {
   id: string;
   title: string;
   fileUrl: string;
+  thumbnailUrl?: string | null; // NEW
   size: string;
   type: string;
   course: string;
   date: string;
   status: string;
   pointsAwarded: number | null;
+  validation?: Validation | null; // NEW
 };
 
 export default function FullUploadsTable({ uploads }: { uploads: Upload[] }) {
@@ -36,11 +60,19 @@ export default function FullUploadsTable({ uploads }: { uploads: Upload[] }) {
           const statusKey = String(upload.status ?? "pending").toLowerCase();
           const style = statusStyles[statusKey] || statusStyles["—"];
           const pointsText = upload.pointsAwarded == null ? "—" : `${upload.pointsAwarded} pts`;
+          const validationBadge = upload.validation ? validationStyles[upload.validation.status] : null;
 
           return (
             <div key={upload.id} className="p-4">
               <div className="flex items-start gap-3">
-                <Image src={fileIcons[upload.type]} alt="" width={28} height={28} />
+                {/* CHANGED: shows the document's real thumbnail when available, falls back to the static file-type icon */}
+                {upload.thumbnailUrl ? (
+                  <div className="relative size-7 rounded overflow-hidden shrink-0">
+                    <Image src={upload.thumbnailUrl} alt="" fill className="object-cover" />
+                  </div>
+                ) : (
+                  <Image src={fileIcons[upload.type] || fileIcons.pdf} alt="" width={28} height={28} />
+                )}
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-[#212121]">{upload.title}</p>
                   <p className="mt-1 text-xs text-[#909dad]">{upload.course} · {upload.size}</p>
@@ -49,6 +81,12 @@ export default function FullUploadsTable({ uploads }: { uploads: Upload[] }) {
                     <span className={`${style.bg} ${style.text} flex items-center gap-1 rounded-full px-2 py-1`}>
                       {style.icon} {statusKey === "pending" ? "Pending" : statusKey === "approved" ? "Approved" : statusKey === "rejected" ? "Rejected" : upload.status}
                     </span>
+                    {/* NEW: validation badge, only shown when flagged or needing manual review */}
+                    {validationBadge && (
+                      <span className={`${validationBadge.bg} ${validationBadge.text} flex items-center gap-1 rounded-full px-2 py-1`}>
+                        {validationBadge.icon} {validationBadge.label}
+                      </span>
+                    )}
                     <span>{pointsText}</span>
                   </div>
                 </div>
@@ -56,7 +94,6 @@ export default function FullUploadsTable({ uploads }: { uploads: Upload[] }) {
                   <button type="button" aria-label={`Open ${upload.title}`} className="text-[#212121]" onClick={() => window.open(upload.fileUrl, "_blank", "noopener,noreferrer")}>
                     <ExternalLink size={18} />
                   </button>
-                  {/* CHANGED: disabled — no student-facing edit endpoint exists yet (PATCH /documents/{id} is admin-only) */}
                   <button
                     type="button"
                     aria-label={`Edit ${upload.title}`}
@@ -91,11 +128,19 @@ export default function FullUploadsTable({ uploads }: { uploads: Upload[] }) {
           const statusKey = String(upload.status ?? "pending").toLowerCase();
           const style = statusStyles[statusKey] || statusStyles["—"];
           const pointsText = upload.pointsAwarded == null ? "—" : `${upload.pointsAwarded} pts`;
+          const validationBadge = upload.validation ? validationStyles[upload.validation.status] : null;
 
           return (
             <div key={upload.id} className="flex items-center border-b border-[#f2f4f7] last:border-b-0">
               <div className="flex-1 flex items-center gap-4 px-8 py-8">
-                <Image src={fileIcons[upload.type]} alt="" width={28} height={28} />
+                {/* CHANGED: real thumbnail when available, falls back to static file-type icon */}
+                {upload.thumbnailUrl ? (
+                  <div className="relative size-7 rounded overflow-hidden shrink-0">
+                    <Image src={upload.thumbnailUrl} alt="" fill className="object-cover" />
+                  </div>
+                ) : (
+                  <Image src={fileIcons[upload.type] || fileIcons.pdf} alt="" width={28} height={28} />
+                )}
                 <div>
                   <p className="text-base text-[#212121]">{upload.title}</p>
                   <p className="text-xs text-[#909dad]">{upload.size}</p>
@@ -105,10 +150,16 @@ export default function FullUploadsTable({ uploads }: { uploads: Upload[] }) {
               <div className="flex-1 flex items-center gap-1.5 px-6 text-sm text-[#4a5565]">
                 <Calendar size={14} /> {upload.date}
               </div>
-              <div className="flex-1 px-6">
+              <div className="flex-1 px-6 flex flex-col items-start gap-1.5">
                 <div className={`${style?.bg || "bg-[#f3f4f6]"} ${style?.text || "text-[#6b7280]"} flex items-center gap-1 px-2.5 py-1 rounded-full w-fit text-xs`}>
                   {style?.icon} {statusKey === "pending" ? "Pending" : statusKey === "approved" ? "Approved" : statusKey === "rejected" ? "Rejected" : upload.status}
                 </div>
+                {/* NEW: validation badge under the review status, when relevant */}
+                {validationBadge && (
+                  <div className={`${validationBadge.bg} ${validationBadge.text} flex items-center gap-1 px-2.5 py-1 rounded-full w-fit text-xs`}>
+                    {validationBadge.icon} {validationBadge.label}
+                  </div>
+                )}
               </div>
               <p className="flex-1 text-base text-[#101828] px-6">{pointsText}</p>
               <div className="w-[140px] shrink-0 flex items-center justify-center gap-6">
@@ -120,7 +171,6 @@ export default function FullUploadsTable({ uploads }: { uploads: Upload[] }) {
                 >
                   <ExternalLink size={20} />
                 </button>
-                {/* CHANGED: disabled — no student-facing edit endpoint exists yet (PATCH /documents/{id} is admin-only) */}
                 <button
                   type="button"
                   aria-label={`Edit ${upload.title}`}

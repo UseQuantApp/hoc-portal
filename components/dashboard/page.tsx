@@ -11,6 +11,7 @@ import LeaderboardCard from "@/components/dashboard/LeaderboardCard";
 import RecentWinsCard, { type PointsTransaction } from "@/components/dashboard/RecentWinsCard";
 import type { Leader } from "@/components/dashboard/LeaderboardCard";
 import { dedupeDocuments } from "@/lib/documents";
+import { useProfile } from "@/context/ProfileContext";
 
 type PointsSummary = { points: number; tokens: number; lifetimePointsEarned: number; uploadStreakDays: number };
 
@@ -27,6 +28,8 @@ type Badge = {
 };
 
 export default function DashboardPage() {
+  // NEW: pulls the logged-in user's real photo so their own leaderboard row can show it
+  const { photoUrl } = useProfile();
   const [fullName, setFullName] = useState("");
   const [points, setPoints] = useState<PointsSummary>({ points: 0, tokens: 0, lifetimePointsEarned: 0, uploadStreakDays: 0 });
   const [history, setHistory] = useState<PointsTransaction[]>([]);
@@ -71,25 +74,27 @@ export default function DashboardPage() {
 
         const leaderboard = leaderboardResponse.data ?? leaderboardResponse;
         setLeaderboardMe(leaderboard.me);
-        setLeaders((leaderboard.entries ?? []).map((entry: { rank: number; fullName: string; points: number; materialsUploaded: number }) => ({
-          name: entry.fullName,
-          tier: `#${entry.rank}`,
-          materials: entry.materialsUploaded,
-          points: entry.points.toLocaleString(),
-          medal: entry.rank <= 3 ? `/images/medal-${entry.rank === 1 ? "gold" : entry.rank === 2 ? "silver" : "bronze"}.svg` : null,
-          rank: entry.rank,
-          // CHANGED: no photo field exists on LeaderboardEntry yet — null lets
-          // LeaderboardCard fall back to each person's InitialsAvatar instead
-          // of the old default silhouette image.
-          avatar: null,
-          isYou: leaderboard.me?.rank === entry.rank,
-        })));
+        setLeaders((leaderboard.entries ?? []).map((entry: { rank: number; fullName: string; points: number; materialsUploaded: number }) => {
+          const isYou = leaderboard.me?.rank === entry.rank;
+          return {
+            name: entry.fullName,
+            tier: `#${entry.rank}`,
+            materials: entry.materialsUploaded,
+            points: entry.points.toLocaleString(),
+            medal: entry.rank <= 3 ? `/images/medal-${entry.rank === 1 ? "gold" : entry.rank === 2 ? "silver" : "bronze"}.svg` : null,
+            rank: entry.rank,
+            // CHANGED: your own row uses your real photo from context; everyone
+            // else falls back to InitialsAvatar since LeaderboardEntry has no photo field
+            avatar: isYou ? photoUrl : null,
+            isYou,
+          };
+        }));
       } catch (err) {
         console.error("Failed to load dashboard data:", err);
       }
     }
     loadDashboardData();
-  }, []);
+  }, [photoUrl]);
 
   return (
     <main className="min-h-screen bg-[#fbfbfb] flex flex-col items-center gap-8 px-4 md:px-16 py-8">

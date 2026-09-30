@@ -30,11 +30,13 @@ export async function apiFetch(path: string, options: RequestInit = {}) {
   return data;
 }
 
-export async function apiFetchFormData(path: string, formData: FormData) {
+// CHANGED: added an optional `method` param (defaults to "POST" so existing
+// callers are unaffected) — needed for endpoints like PATCH /students/me/photo
+export async function apiFetchFormData(path: string, formData: FormData, method: string = "POST") {
   const token = typeof window !== "undefined" ? localStorage.getItem("quant_token") : null;
 
   const res = await fetch(`${API_BASE}${path}`, {
-    method: "POST",
+    method,
     headers: {
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },

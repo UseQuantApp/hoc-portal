@@ -6,7 +6,7 @@ import Image from "next/image";
 import Navbar from "@/components/dashboard/Navbar";
 import LogoutConfirmModal from "@/components/dashboard/LogoutConfirmModal";
 import { LogOut, Pencil, Coins, TrendingUp, ChevronDown, ChevronRight, X, Upload } from "lucide-react";
-import { apiFetch } from "@/lib/api";
+import { apiFetch, apiFetchFormData } from "@/lib/api";
 import { logoutStudent } from "@/lib/auth";
 import { getCurrentAcademicSession } from "@/lib/academic";
 import { useProfile } from "@/context/ProfileContext";
@@ -50,21 +50,22 @@ export default function AccountPage() {
   const [newPasswordInput, setNewPasswordInput] = useState("");
   const [confirmPasswordInput, setConfirmPasswordInput] = useState("");
 
-  // Profile photo — also non-functional for now (no backend endpoint exists yet).
+  // CHANGED: profile photo is now actually uploaded via PATCH /students/me/photo
   const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
   const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null);
   const [photoError, setPhotoError] = useState("");
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
 
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = e.target.files?.[0];
     if (!selected) return;
 
-    const allowedTypes = ["image/jpeg", "image/png", "image/gif"];
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp"]; // matches what the backend accepts
     if (!allowedTypes.includes(selected.type)) {
-      setPhotoError("Please choose a JPG, PNG, or GIF file.");
+      setPhotoError("Please choose a JPG, PNG, or WebP file.");
       return;
     }
     if (selected.size > 5 * 1024 * 1024) {
@@ -75,15 +76,32 @@ export default function AccountPage() {
     setPhotoError("");
     setSelectedPhoto(selected);
     const previewUrl = URL.createObjectURL(selected);
-    setPhotoPreviewUrl(previewUrl);
-    setPhotoUrl(previewUrl); // propagate to Navbar and everywhere else via context
-    // TODO: once /students/me/photo (or similar) exists, upload `selected` here
-    // via apiFetchFormData instead of just previewing it locally.
+    setPhotoPreviewUrl(previewUrl); // instant local preview while upload is in flight
+    setPhotoUrl(previewUrl); // propagate the instant preview to Navbar etc.
+
+    setIsUploadingPhoto(true);
+    try {
+      const formData = new FormData();
+      formData.append("photo", selected);
+      const response = await apiFetchFormData("/students/me/photo", formData, "PATCH");
+      const updatedStudent = response.data ?? response;
+      // swap the local blob preview for the real, permanent server URL
+      setPhotoPreviewUrl(updatedStudent.photoUrl);
+      setPhotoUrl(updatedStudent.photoUrl);
+    } catch (err) {
+      setPhotoError(err instanceof Error ? err.message : "Failed to upload photo.");
+      // roll back to no-photo state on failure
+      setPhotoPreviewUrl(null);
+      setPhotoUrl(null);
+      setSelectedPhoto(null);
+    } finally {
+      setIsUploadingPhoto(false);
+    }
   };
 
   useEffect(() => {
     return () => {
-      if (photoPreviewUrl) URL.revokeObjectURL(photoPreviewUrl);
+      if (photoPreviewUrl && photoPreviewUrl.startsWith("blob:")) URL.revokeObjectURL(photoPreviewUrl);
     };
   }, [photoPreviewUrl]);
 
@@ -94,8 +112,6 @@ export default function AccountPage() {
     setConfirmPasswordInput("");
   };
 
-  // CHANGED: now also handles ?tab=settings (from the Navbar profile click),
-  // alongside the existing ?tab=activity handling.
   useEffect(() => {
     const tab = new URLSearchParams(window.location.search).get("tab");
     if (tab === "activity") {
@@ -125,6 +141,10 @@ export default function AccountPage() {
         setDept(student.department || "");
         setSettingsLevel(student.level || "");
         setEmail(student.email || "");
+        // NEW: pick up a photo already saved on the server (e.g. after a page refresh)
+        if (student.photoUrl) {
+          setPhotoPreviewUrl(student.photoUrl);
+        }
 
         const summary = pointsResponse.data ?? pointsResponse;
         setPointsSummary({
@@ -458,22 +478,21 @@ export default function AccountPage() {
                     )}
                   </div>
                   <div className="flex flex-col gap-2">
-                    <label className="w-fit cursor-pointer bg-white border border-[#f6a86b] text-[#b64a03] text-sm font-bold px-4 py-2 rounded-lg flex items-center gap-2">
+                    <label className={`w-fit cursor-pointer bg-white border border-[#f6a86b] text-[#b64a03] text-sm font-bold px-4 py-2 rounded-lg flex items-center gap-2 ${isUploadingPhoto ? "opacity-50 pointer-events-none" : ""}`}>
                       <Upload size={14} />
-                      Upload photo
+                      {isUploadingPhoto ? "Uploading..." : "Upload photo"}
                       <input
                         type="file"
-                        accept="image/jpeg,image/png,image/gif"
+                        accept="image/jpeg,image/png,image/webp"
                         className="hidden"
                         onChange={handlePhotoChange}
+                        disabled={isUploadingPhoto}
                       />
                     </label>
-                    <p className="text-xs text-[#9f9f9f]">JPG, PNG or GIF · Max 5MB</p>
+                    <p className="text-xs text-[#9f9f9f]">JPG, PNG or WebP · Max 5MB</p>
                     {photoError && <p className="text-xs font-bold text-[#ff3b3b]">{photoError}</p>}
-                    {selectedPhoto && !photoError && (
-                      <p className="text-xs text-[#9f9f9f]">
-                        Selected: {selectedPhoto.name} — not saved yet (upload isn&apos;t wired up).
-                      </p>
+                    {!isUploadingPhoto && selectedPhoto && !photoError && (
+                      <p className="text-xs text-[#00b368]">Photo updated.</p>
                     )}
                   </div>
                 </div>
