@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import type { Leader } from "@/components/dashboard/LeaderboardCard";
+import InitialsAvatar from "@/components/shared/InitialsAvatar";
 
 const medalIcon: Record<string, string> = {
   "medal-1": "/images/medal-gold.svg",
@@ -26,8 +27,12 @@ export default function FullLeaderboard({ leaders }: { leaders: Leader[] }) {
               <p className="font-bold text-lg lg:text-2xl text-[#f60] shrink-0 w-6 lg:w-10">#{leader.rank}</p>
             )}
             <div className="flex items-center gap-2 lg:gap-4 min-w-0">
-              <div className="relative size-[44px] lg:size-[86px] rounded-full overflow-hidden bg-[#d9d9d9] shrink-0">
-                <Image src={leader.avatar} alt={leader.name} fill className="object-cover" />
+              <div className="relative size-[44px] lg:size-[86px] rounded-full overflow-hidden shrink-0">
+                {leader.avatar ? (
+                  <Image src={leader.avatar} alt={leader.name} fill className="object-cover" />
+                ) : (
+                  <InitialsAvatar name={leader.name} className="size-full text-lg lg:text-3xl" />
+                )}
               </div>
               <div className="flex flex-col gap-1 lg:gap-2 min-w-0">
                 <p
