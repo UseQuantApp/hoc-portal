@@ -9,6 +9,14 @@ import { getCurrentAcademicSession } from "@/lib/academic";
 
 const columns = ["Document Title", "Courses", "Date"];
 
+// NEW: proper icon lookup instead of a binary doc/pdf check — handles docx/pptx too
+const fileIcons: Record<string, string> = {
+  doc: "/images/file-icon-word.png",
+  docx: "/images/file-icon-word.png",
+  pdf: "/images/file-icon-pdf.png",
+  pptx: "/images/file-icon-pptx.png",
+};
+
 type CourseValue =
   | string
   | {
@@ -33,6 +41,7 @@ type DocumentFile = {
   downloadCount: number;
   uploadedByType: string;
   uploadedBy: string;
+  createdAt?: string; // NEW
 };
 
 type Upload = {
@@ -55,8 +64,6 @@ export default function RecentUploadsCard() {
         setIsLoading(true);
         setError("");
 
-        // CHANGED: session is now computed instead of hardcoded, so this doesn't silently
-        // under-count once the academic session rolls over
         const session = getCurrentAcademicSession();
         const [firstRes, secondRes] = await Promise.all([
           apiFetch(`/documents/mine?session=${session}&semester=first`),
@@ -90,7 +97,8 @@ export default function RecentUploadsCard() {
               size: `${(doc.sizeBytes / 1024 / 1024).toFixed(1)} MB`,
               type: doc.fileType.toLowerCase().replace(".", "") || "pdf",
               course: courseName,
-              date: new Date().toISOString().split("T")[0],
+              // CHANGED: uses the document's real upload date instead of always showing today
+              date: doc.createdAt ? new Date(doc.createdAt).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
             };
           });
 
@@ -162,8 +170,9 @@ export default function RecentUploadsCard() {
             {uploads.map((upload, index) => (
               <div key={`${upload.id}-${index}`} className="flex flex-col lg:flex-row lg:items-center border-b border-[#f2f4f7] last:border-b-0">
                 <div className="flex-1 flex items-center gap-3 lg:gap-4 px-4 lg:px-8 pt-4 lg:py-8">
+                  {/* CHANGED: uses the icon map so docx/pptx get their correct icons instead of falling through to PDF */}
                   <Image
-                    src={upload.type === "doc" ? "/images/file-icon-word.png" : "/images/file-icon-pdf.png"}
+                    src={fileIcons[upload.type] || fileIcons.pdf}
                     alt=""
                     width={28}
                     height={28}
