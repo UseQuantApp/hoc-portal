@@ -94,7 +94,12 @@ export default function ForgotPasswordPage() {
 
         {/* Right: Blue promo panel */}
         <div className="hidden lg:block w-full lg:w-1/2 relative bg-[#006dff] rounded-3xl overflow-hidden aspect-[644/953] max-w-[644px]">
-          <Image src="/images/blue.png" alt="" fill className="object-cover" />
+          <Image
+            src="/images/blue.png"
+            alt="Blue"
+            fill
+            sizes="(max-width: 768px) 100vw, 50vw"
+          />
         </div>
       </div>
     </main>
