@@ -3,20 +3,14 @@
 import { useEffect, useState } from "react";
 import Navbar from "@/components/dashboard/Navbar";
 import FullLeaderboard from "@/components/dashboard/FullLeaderboard";
-import type { Leader } from "@/components/dashboard/LeaderboardCard";
 import { apiFetch } from "@/lib/api";
 import { useProfile } from "@/context/ProfileContext";
-
-type LeaderboardEntry = {
-  rank: number;
-  fullName: string;
-  points: number;
-  materialsUploaded: number;
-};
+import { toLeaders, type LeaderboardEntry, type LeaderboardMe } from "@/lib/leaderboard";
 
 export default function LeaderboardPage() {
-  const { photoUrl } = useProfile();
-  const [leaders, setLeaders] = useState<Leader[]>([]);
+  const { fullName, photoUrl } = useProfile();
+  const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
+  const [me, setMe] = useState<LeaderboardMe>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -25,31 +19,8 @@ export default function LeaderboardPage() {
       try {
         const response = await apiFetch("/leaderboard?limit=20");
         const leaderboard = response.data ?? response;
-        const mappedLeaders = [...(leaderboard.entries ?? [])].sort((a: LeaderboardEntry, b: LeaderboardEntry) => a.rank - b.rank).map((entry: LeaderboardEntry) => ({
-          name: entry.fullName,
-          tier: `#${entry.rank}`,
-          materials: entry.materialsUploaded,
-          points: entry.points.toLocaleString(),
-          medal: entry.rank <= 3 ? `/images/medal-${entry.rank === 1 ? "gold" : entry.rank === 2 ? "silver" : "bronze"}.svg` : null,
-          rank: entry.rank,
-          avatar: null,
-          isYou: leaderboard.me?.rank === entry.rank,
-        } satisfies Leader));
-
-        if (leaderboard.me && !mappedLeaders.some((leader: Leader) => leader.isYou)) {
-          mappedLeaders.push({
-            name: "You",
-            tier: `#${leaderboard.me.rank}`,
-            materials: 0,
-            points: Number(leaderboard.me.points ?? 0).toLocaleString(),
-            medal: null,
-            rank: leaderboard.me.rank,
-            avatar: null,
-            isYou: true,
-          });
-        }
-
-        setLeaders(mappedLeaders);
+        setEntries(leaderboard.entries ?? []);
+        setMe(leaderboard.me ?? null);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load leaderboard.");
       } finally {
@@ -59,6 +30,21 @@ export default function LeaderboardPage() {
 
     loadLeaderboard();
   }, []);
+
+  // "you" + your photo resolved at render so a late-loading profile or new upload lands on the right row
+  const leaders = toLeaders(entries, me, fullName, photoUrl);
+  if (me && !leaders.some((leader) => leader.isYou)) {
+    leaders.push({
+      name: fullName || "You",
+      tier: `#${me.rank}`,
+      materials: 0,
+      points: Number(me.points ?? 0).toLocaleString(),
+      medal: null,
+      rank: me.rank,
+      avatar: photoUrl,
+      isYou: true,
+    });
+  }
 
   return (
     <main className="min-h-screen bg-[#fbfbfb] flex flex-col items-center gap-6 lg:gap-8 px-4 md:px-16 py-6 lg:py-8">
@@ -74,8 +60,7 @@ export default function LeaderboardPage() {
         ) : leaders.length === 0 ? (
           <div className="bg-white border border-[#f2f4f7] rounded-2xl py-20 text-center text-[#9f9f9f]">No leaderboard data yet.</div>
         ) : (
-          // only your own photo is known (entries carry no photo field), applied at render so a new upload shows without refetching
-          <FullLeaderboard leaders={leaders.map((leader) => (leader.isYou ? { ...leader, avatar: photoUrl } : leader))} />
+          <FullLeaderboard leaders={leaders} />
         )}
       </div>
     </main>

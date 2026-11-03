@@ -84,7 +84,7 @@ export default function ResetPasswordPage() {
 
               <div className="flex flex-col gap-3">
                 <label htmlFor="code" className="text-sm lg:text-base font-bold text-[#212121]">
-                  6-digit Code
+                  6-digit OTP
                 </label>
                 <div className="bg-white border-[1.5px] border-[#f4f4f4] rounded-xl p-4">
                   <input

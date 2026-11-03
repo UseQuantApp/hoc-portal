@@ -23,9 +23,9 @@ export default function ForgotPasswordPage() {
         method: "POST",
         body: JSON.stringify({ email }),
       });
-      setSuccessMessage("If that email is registered, a reset code has been sent.");
+      setSuccessMessage("If that email is registered, an OTP has been sent to you.");
     } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : "Unable to send reset code.");
+      setSubmitError(err instanceof Error ? err.message : "Unable to send OTP.");
     } finally {
       setIsSubmitting(false);
     }
@@ -43,7 +43,7 @@ export default function ForgotPasswordPage() {
           <div className="flex flex-col gap-2 text-center lg:text-left">
             <h1 className="text-xl lg:text-[28px] font-bold text-[#212121]">Reset password</h1>
             <p className="text-sm lg:text-base text-[#212121]">
-              Enter your email to receive a reset link
+              Enter your email to receive an OTP
             </p>
           </div>
 
@@ -77,12 +77,12 @@ export default function ForgotPasswordPage() {
               disabled={isSubmitting}
               className="w-full bg-[#f60] disabled:opacity-50 text-white text-base lg:text-lg font-bold lowercase py-3 rounded-xl hover:bg-[#e55600] transition-colors"
             >
-              {isSubmitting ? "sending..." : "send reset link"}
+              {isSubmitting ? "sending..." : "send otp"}
             </button>
 
             {successMessage && (
               <Link href="/reset-password" className="text-sm lg:text-base font-bold text-[#006dff] text-center">
-                Enter your reset code
+                Enter your OTP
               </Link>
             )}
 

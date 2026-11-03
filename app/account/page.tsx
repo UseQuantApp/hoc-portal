@@ -1,7 +1,7 @@
 "use client";
 
-import { startTransition, useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { startTransition, useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import Navbar from "@/components/dashboard/Navbar";
@@ -22,6 +22,22 @@ const badgeCategoryNames: Record<string, string> = {
   special_recognition: "Special Recognition",
   social_impact: "Social Impact",
 };
+
+const tabFromQuery: Record<string, string> = {
+  activity: "Notifications & Activity",
+  settings: "Account Settings",
+};
+
+// Opens the tab named in ?tab= (navbar bell → activity, avatar → settings). Reacts to
+// query changes too, so it works when you're already on /account. Isolated in its own
+// Suspense boundary because useSearchParams would otherwise opt the page out of prerendering.
+function TabFromQuery({ onTab }: { onTab: (tab: string) => void }) {
+  const tab = useSearchParams().get("tab");
+  useEffect(() => {
+    if (tab && tabFromQuery[tab]) startTransition(() => onTab(tabFromQuery[tab]));
+  }, [tab, onTab]);
+  return null;
+}
 
 export default function AccountPage() {
   const router = useRouter();
@@ -113,15 +129,6 @@ export default function AccountPage() {
     setNewPasswordInput("");
     setConfirmPasswordInput("");
   };
-
-  useEffect(() => {
-    const tab = new URLSearchParams(window.location.search).get("tab");
-    if (tab === "activity") {
-      startTransition(() => setActiveTab("Notifications & Activity"));
-    } else if (tab === "settings") {
-      startTransition(() => setActiveTab("Account Settings"));
-    }
-  }, []);
 
   useEffect(() => {
     async function loadPageData() {
@@ -241,6 +248,9 @@ export default function AccountPage() {
 
   return (
     <main className="min-h-screen bg-[#fbfbfb] flex flex-col items-center gap-6 lg:gap-8 px-4 md:px-16 py-6 lg:py-8">
+      <Suspense fallback={null}>
+        <TabFromQuery onTab={setActiveTab} />
+      </Suspense>
       <div className="w-full max-w-[1312px]">
         <Navbar />
       </div>

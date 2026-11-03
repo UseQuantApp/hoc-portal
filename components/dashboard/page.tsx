@@ -8,7 +8,7 @@ import PointsProgressCard from "@/components/dashboard/PointsProgressCardNew";
 import RecentUploadsCard from "@/components/dashboard/RecentUploadsCard";
 import LeaderboardCard from "@/components/dashboard/LeaderboardCard";
 import RecentWinsCard, { type PointsTransaction } from "@/components/dashboard/RecentWinsCard";
-import type { Leader } from "@/components/dashboard/LeaderboardCard";
+import { toLeaders, type LeaderboardEntry, type LeaderboardMe } from "@/lib/leaderboard";
 import { dedupeDocuments } from "@/lib/documents";
 import { useProfile } from "@/context/ProfileContext";
 
@@ -28,12 +28,12 @@ type Badge = {
 
 export default function DashboardPage() {
   // NEW: pulls the logged-in user's real photo so their own leaderboard row can show it
-  const { photoUrl } = useProfile();
+  const { photoUrl, fullName: profileName } = useProfile();
   const [fullName, setFullName] = useState("");
   const [points, setPoints] = useState<PointsSummary>({ points: 0, tokens: 0, lifetimePointsEarned: 0, uploadStreakDays: 0 });
   const [history, setHistory] = useState<PointsTransaction[]>([]);
-  const [leaders, setLeaders] = useState<Leader[]>([]);
-  const [leaderboardMe, setLeaderboardMe] = useState<{ rank: number; points: number } | null>(null);
+  const [leaderEntries, setLeaderEntries] = useState<LeaderboardEntry[]>([]);
+  const [leaderboardMe, setLeaderboardMe] = useState<LeaderboardMe>(null);
   const [totalUploaded, setTotalUploaded] = useState(0);
   const [badges, setBadges] = useState<Badge[]>([]);
 
@@ -73,27 +73,17 @@ export default function DashboardPage() {
 
         const leaderboard = leaderboardResponse.data ?? leaderboardResponse;
         setLeaderboardMe(leaderboard.me);
-        setLeaders([...(leaderboard.entries ?? [])].sort((a: { rank: number }, b: { rank: number }) => a.rank - b.rank).map((entry: { rank: number; fullName: string; points: number; materialsUploaded: number }) => {
-          const isYou = leaderboard.me?.rank === entry.rank;
-          return {
-            name: entry.fullName,
-            tier: `#${entry.rank}`,
-            materials: entry.materialsUploaded,
-            points: entry.points.toLocaleString(),
-            medal: entry.rank <= 3 ? `/images/medal-${entry.rank === 1 ? "gold" : entry.rank === 2 ? "silver" : "bronze"}.svg` : null,
-            rank: entry.rank,
-            // CHANGED: your own row uses your real photo from context; everyone
-            // else falls back to InitialsAvatar since LeaderboardEntry has no photo field
-            avatar: isYou ? photoUrl : null,
-            isYou,
-          };
-        }));
+        setLeaderEntries(leaderboard.entries ?? []);
       } catch (err) {
         console.error("Failed to load dashboard data:", err);
       }
     }
     loadDashboardData();
-  }, [photoUrl]);
+  }, []);
+
+  // "you" + your photo are resolved at render so a late-loading profile or new photo
+  // lands on the right row without refetching the whole dashboard
+  const leaders = toLeaders(leaderEntries, leaderboardMe, profileName || fullName, photoUrl);
 
   return (
     <main className="min-h-screen bg-[#fbfbfb] flex flex-col items-center gap-8 px-4 md:px-16 py-8">

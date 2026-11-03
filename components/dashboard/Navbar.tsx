@@ -95,13 +95,22 @@ export default function Navbar({ searchQuery, onSearchChange }: NavbarProps) {
         </nav>
 
         <div className="flex items-center gap-3.5">
-          <button className="hidden lg:flex size-10 rounded-lg bg-[#efefef] items-center justify-center">
+          {/* no notifications endpoint yet — the bell opens the Account activity feed */}
+          <Link
+            href="/account?tab=activity"
+            aria-label="Notifications"
+            className="hidden lg:flex size-10 rounded-lg bg-[#efefef] items-center justify-center"
+          >
             <Bell size={16} />
-          </button>
+          </Link>
           {themeButton}
-          <button className="lg:hidden size-10 rounded-lg bg-[#f60] flex items-center justify-center">
+          <Link
+            href="/account?tab=activity"
+            aria-label="Notifications"
+            className="lg:hidden size-10 rounded-lg bg-[#f60] flex items-center justify-center"
+          >
             <Bell size={16} className="text-white" />
-          </button>
+          </Link>
           <button
             type="button"
             aria-label="Open navigation menu"
