@@ -70,7 +70,6 @@ export default function UploadsPage() {
   const [uploads, setUploads] = useState<Upload[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>("");
-  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     async function fetchUploads() {
@@ -120,19 +119,10 @@ export default function UploadsPage() {
     fetchUploads();
   }, []);
 
-  const trimmedQuery = searchQuery.trim().toLowerCase();
-  const filteredUploads = trimmedQuery
-    ? uploads.filter(
-        (upload) =>
-          upload.title.toLowerCase().includes(trimmedQuery) ||
-          upload.course.toLowerCase().includes(trimmedQuery)
-      )
-    : uploads;
-
   return (
     <main className="min-h-screen bg-[#fbfbfb] flex flex-col items-center gap-6 lg:gap-8 px-4 md:px-16 py-6 lg:py-8">
       <div className="w-full max-w-[1312px]">
-        <Navbar searchQuery={searchQuery} onSearchChange={setSearchQuery} />
+        <Navbar />
       </div>
 
       <div className="w-full max-w-[1312px] flex flex-col gap-6 lg:gap-8">
@@ -168,12 +158,8 @@ export default function UploadsPage() {
               </Link>
             </div>
           </div>
-        ) : filteredUploads.length === 0 ? (
-          <div className="bg-white border border-[#f2f4f7] rounded-2xl py-20 flex items-center justify-center">
-            <p className="text-[#9f9f9f]">No materials match &quot;{searchQuery}&quot;.</p>
-          </div>
         ) : (
-          <FullUploadsTable uploads={filteredUploads} />
+          <FullUploadsTable uploads={uploads} />
         )}
       </div>
     </main>

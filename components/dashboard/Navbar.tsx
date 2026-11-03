@@ -8,7 +8,6 @@ import { useState } from "react";
 import { logoutStudent } from "@/lib/auth";
 import { useProfile } from "@/context/ProfileContext";
 import InitialsAvatar from "@/components/shared/InitialsAvatar";
-import PageFilters from "@/components/dashboard/PageFilters";
 import LogoutConfirmModal from "@/components/dashboard/LogoutConfirmModal";
 
 const navItems = [
@@ -20,12 +19,7 @@ const navItems = [
 
 const mobileNavItems = navItems;
 
-type NavbarProps = {
-  searchQuery?: string;
-  onSearchChange?: (value: string) => void;
-};
-
-export default function Navbar({ searchQuery, onSearchChange }: NavbarProps) {
+export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const { fullName, photoUrl } = useProfile();
@@ -207,7 +201,6 @@ export default function Navbar({ searchQuery, onSearchChange }: NavbarProps) {
           </aside>
         </div>
       )}
-    {pathname !== "/rewards" && pathname !== "/account" && <PageFilters searchQuery={searchQuery} onSearchChange={onSearchChange} />}
     {showLogoutConfirm && (
       <LogoutConfirmModal
         onCancel={() => setShowLogoutConfirm(false)}

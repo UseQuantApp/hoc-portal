@@ -49,7 +49,6 @@ components/
 	Header.tsx                       Public/auth page header
 	StepIndicator.tsx                Auth step indicator
 	dashboard/Navbar.tsx             Authenticated navigation and user summary
-	dashboard/PageFilters.tsx        Shared level and semester dropdown UI
 	dashboard/*                      Dashboard cards, tables, banners, leaderboard
 
 lib/
@@ -108,7 +107,7 @@ When adding a fetch, unwrap responses consistently with the existing pattern: `r
 
 - Existing UI uses Tailwind utility classes, white content surfaces, `#fbfbfb` page backgrounds, orange primary actions (`#f60`), blue navigation/links (`#006dff`), and Codec Pro.
 - Reuse existing visual patterns and assets before introducing new abstractions.
-- `Navbar` is shared by the authenticated portal pages. `PageFilters` currently renders level and semester dropdowns globally; its selections are UI state only and are not yet wired into every page's API query.
+- `Navbar` is shared by the authenticated portal pages. The global search box and level/semester dropdowns (`PageFilters`) were removed; there is currently no search or filter UI.
 - Keep responsive behavior aligned with existing `lg:` breakpoints.
 - Use `lucide-react` icons rather than hand-drawn SVGs for controls.
 - Preserve empty, loading, success, and error states when changing data-driven panels.
@@ -118,7 +117,6 @@ When adding a fetch, unwrap responses consistently with the existing pattern: `r
 - `components/dashboard/RecentWinsCard.tsx` uses live `/points/mine/history` transactions passed from the Dashboard. Do not reintroduce hardcoded win entries or make a second history request on that page.
 - `lib/dashboard-data.ts` still contains legacy placeholder uploads/progress/leaderboard datasets. Confirm whether a requested surface is live before replacing or extending these values.
 - Some pages use hardcoded session/semester query values such as `2024/2025` and `first`.
-- The shared level/semester dropdowns do not yet control backend filtering. Treat wiring those filters as a separate feature, not as an assumed existing capability.
 - `app/account/page.tsx` has an existing unused `rankValue` warning. Avoid unrelated cleanup unless requested.
 - The project has had stale Next generated route/type artifacts after deleting a page. Delete `.next` and rerun validation when diagnostics mention a route that no longer exists.
 
