@@ -169,7 +169,7 @@ export default function RewardsPage() {
         </div>
 
         {history.length === 0 ? (
-          <p className="text-sm text-[#9f9f9f]">You haven't redeemed anything yet.</p>
+          <p className="text-sm text-[#9f9f9f]">You haven&apos;t redeemed anything yet.</p>
         ) : (
           <div className="flex flex-col divide-y divide-[#f2f4f7]">
             {history.map((entry) => (

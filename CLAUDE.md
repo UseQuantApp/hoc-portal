@@ -6,7 +6,7 @@ Quant is a student academic portal built with Next.js App Router. Students can s
 
 This repository is the frontend only. The production API is external:
 
-`https://quant-production-1004.up.railway.app/api/v1`
+`https://api.getquant.app/api/v1`
 
 The GitHub repository is `https://github.com/USEQUANT/Quant-admin.git`.
 

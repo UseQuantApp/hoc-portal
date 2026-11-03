@@ -1,4 +1,4 @@
-const API_BASE = "https://quant-production-1004.up.railway.app/api/v1";
+const API_BASE = "https://api.getquant.app/api/v1";
 
 export async function apiFetch(path: string, options: RequestInit = {}) {
   const token = typeof window !== "undefined" ? localStorage.getItem("quant_token") : null;
@@ -12,7 +12,8 @@ export async function apiFetch(path: string, options: RequestInit = {}) {
     },
   });
 
-  const data = await res.json();
+  // non-JSON bodies (e.g. a proxy 413 page) would otherwise throw "Unexpected token <"
+  const data = await res.json().catch(() => ({ message: res.status === 413 ? "File is too large." : undefined }));
 
   if (!res.ok) {
     console.error("API error response:", data); // temporary — remove once fully working
@@ -43,7 +44,8 @@ export async function apiFetchFormData(path: string, formData: FormData, method:
     body: formData,
   });
 
-  const data = await res.json();
+  // non-JSON bodies (e.g. a proxy 413 page) would otherwise throw "Unexpected token <"
+  const data = await res.json().catch(() => ({ message: res.status === 413 ? "File is too large." : undefined }));
 
   if (!res.ok) {
     console.error("API error response:", data);

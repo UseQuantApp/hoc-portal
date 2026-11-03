@@ -60,7 +60,10 @@ export default function AccountPage() {
 
   const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = e.target.files?.[0];
+    // reset so picking the same file again (e.g. after a failed upload) still fires onChange
+    e.target.value = "";
     if (!selected) return;
+    const previousPhotoUrl = photoPreviewUrl && !photoPreviewUrl.startsWith("blob:") ? photoPreviewUrl : null;
 
     const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
     if (!allowedTypes.includes(selected.type)) {
@@ -84,12 +87,14 @@ export default function AccountPage() {
       formData.append("photo", selected);
       const response = await apiFetchFormData("/students/me/photo", formData, "PATCH");
       const updatedStudent = response.data ?? response;
+      if (!updatedStudent.photoUrl) throw new Error("Upload finished but no photo URL was returned.");
       setPhotoPreviewUrl(updatedStudent.photoUrl);
       setPhotoUrl(updatedStudent.photoUrl);
     } catch (err) {
       setPhotoError(err instanceof Error ? err.message : "Failed to upload photo.");
-      setPhotoPreviewUrl(null);
-      setPhotoUrl(null);
+      // keep the photo the user had before instead of wiping it
+      setPhotoPreviewUrl(previousPhotoUrl);
+      setPhotoUrl(previousPhotoUrl);
       setSelectedPhoto(null);
     } finally {
       setIsUploadingPhoto(false);
@@ -155,7 +160,7 @@ export default function AccountPage() {
 
         const allDocs = [...(firstDocsResponse.data || []), ...(secondDocsResponse.data || [])];
         setMaterialsUploaded(allDocs.length);
-        const totalDelivered = allDocs.reduce((sum: number, doc: any) => sum + (doc.downloadCount || 0), 0);
+        const totalDelivered = allDocs.reduce((sum: number, doc: { downloadCount?: number }) => sum + (doc.downloadCount || 0), 0);
         setDocumentsDelivered(totalDelivered);
       } catch (err) {
         console.error("Failed to load account overview:", err);
@@ -362,7 +367,7 @@ export default function AccountPage() {
                     <div className="w-full h-2 bg-[#f2f4f7] rounded-full overflow-hidden">
                       <div className="h-full bg-[#00b368] rounded-full" style={{ width: `${rewardTierProgress}%` }} />
                     </div>
-                    <div className="flex items-center justify-between text-xs">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-xs">
                       <span className="text-[#9f9f9f]">Keep uploading to unlock more rewards</span>
                       <span className="text-[#9f9f9f]">{pointsToNextTier.toLocaleString()} pts to next reward · {rewardTierProgress}%</span>
                     </div>

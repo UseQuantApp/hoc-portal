@@ -5,6 +5,7 @@ import Navbar from "@/components/dashboard/Navbar";
 import FullLeaderboard from "@/components/dashboard/FullLeaderboard";
 import type { Leader } from "@/components/dashboard/LeaderboardCard";
 import { apiFetch } from "@/lib/api";
+import { useProfile } from "@/context/ProfileContext";
 
 type LeaderboardEntry = {
   rank: number;
@@ -14,6 +15,7 @@ type LeaderboardEntry = {
 };
 
 export default function LeaderboardPage() {
+  const { photoUrl } = useProfile();
   const [leaders, setLeaders] = useState<Leader[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -30,7 +32,7 @@ export default function LeaderboardPage() {
           points: entry.points.toLocaleString(),
           medal: entry.rank <= 3 ? `/images/medal-${entry.rank === 1 ? "gold" : entry.rank === 2 ? "silver" : "bronze"}.svg` : null,
           rank: entry.rank,
-          avatar: "/images/avatar-user.png",
+          avatar: null,
           isYou: leaderboard.me?.rank === entry.rank,
         } satisfies Leader));
 
@@ -42,7 +44,7 @@ export default function LeaderboardPage() {
             points: Number(leaderboard.me.points ?? 0).toLocaleString(),
             medal: null,
             rank: leaderboard.me.rank,
-            avatar: "/images/avatar-user.png",
+            avatar: null,
             isYou: true,
           });
         }
@@ -72,7 +74,8 @@ export default function LeaderboardPage() {
         ) : leaders.length === 0 ? (
           <div className="bg-white border border-[#f2f4f7] rounded-2xl py-20 text-center text-[#9f9f9f]">No leaderboard data yet.</div>
         ) : (
-          <FullLeaderboard leaders={leaders} />
+          // only your own photo is known (entries carry no photo field), applied at render so a new upload shows without refetching
+          <FullLeaderboard leaders={leaders.map((leader) => (leader.isYou ? { ...leader, avatar: photoUrl } : leader))} />
         )}
       </div>
     </main>

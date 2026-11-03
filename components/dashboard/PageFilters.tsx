@@ -28,12 +28,12 @@ export default function PageFilters({ searchQuery, onSearchChange }: PageFilters
 
   return (
     <div className="flex flex-wrap items-center gap-3 w-full">
-      <div className="bg-white rounded-xl px-3 lg:px-4 py-3 flex items-center gap-2.5 flex-1 min-w-[160px] border border-[#e5e5e5]">
+      <div className="bg-white rounded-xl px-3 lg:px-4 py-3 flex items-center gap-2.5 flex-1 basis-full lg:basis-auto min-w-[160px] border border-[#e5e5e5]">
         <Search size={18} className="text-[#9f9f9f] shrink-0" />
         <input
           value={currentSearch}
           onChange={(event) => handleSearchChange(event.target.value)}
-          placeholder="Search materials, courses..."
+          placeholder="Search all available materials, courses..."
           className="w-full text-sm lg:text-base text-[#212121] placeholder:text-[#21212180] outline-none bg-transparent"
         />
       </div>

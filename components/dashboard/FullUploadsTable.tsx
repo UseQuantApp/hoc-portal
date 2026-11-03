@@ -10,7 +10,7 @@ const fileIcons: Record<string, string> = {
   pptx: "/images/file-icon-pptx.png",
 };
 
-const statusStyles: Record<string, { bg: string; text: string; icon: React.ReactNode }> = {
+export const statusStyles: Record<string, { bg: string; text: string; icon: React.ReactNode }> = {
   pending: { bg: "bg-[#fef9c2]", text: "text-[#894b00]", icon: <Clock size={12} /> },
   approved: { bg: "bg-[#dcfce7]", text: "text-[#016630]", icon: <CheckCircle2 size={12} /> },
   rejected: { bg: "bg-[#ffe2e2]", text: "text-[#9f0712]", icon: <XCircle size={12} /> },

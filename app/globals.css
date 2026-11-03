@@ -23,3 +23,151 @@
 body {
   font-family: "Codec Pro", sans-serif;
 }
+/* ---------------------------------------------------------------------------
+   Dark mode
+   The UI uses hardcoded hex utilities (bg-white, text-[#212121], ...) rather than
+   theme tokens, so dark mode remaps those classes here instead of adding dark:
+   variants to every element. Toggled by data-theme="dark" on <html> (see
+   app/layout.tsx and the moon button in Navbar). Brand/action colours (#f60,
+   #006dff, status greens/reds) are intentionally left untouched.
+   When adding a new neutral colour utility, add its mapping below.
+--------------------------------------------------------------------------- */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+/* page backgrounds */
+[data-theme="dark"] body,
+[data-theme="dark"] .bg-\[\#fbfbfb\],
+[data-theme="dark"] .bg-\[\#fcfdfd\] {
+  background-color: #0f1115;
+}
+
+/* surfaces */
+[data-theme="dark"] .bg-white,
+[data-theme="dark"] .hover\:bg-white:hover {
+  background-color: #181b21;
+}
+
+/* subtle / muted surfaces */
+[data-theme="dark"] .bg-\[\#f6f6f6\],
+[data-theme="dark"] .bg-\[\#f0f0f0\],
+[data-theme="dark"] .bg-\[\#f4f4f4\],
+[data-theme="dark"] .bg-\[\#f2f4f7\],
+[data-theme="dark"] .bg-\[\#efefef\],
+[data-theme="dark"] .bg-\[\#f3f4f6\],
+[data-theme="dark"] .bg-\[\#dbdbdb\],
+[data-theme="dark"] .hover\:bg-\[\#f6f6f6\]:hover {
+  background-color: #242831;
+}
+[data-theme="dark"] .bg-\[\#cbcbcb\] {
+  background-color: #3a3f48;
+}
+
+/* dark buttons need to stay distinguishable from the dark page */
+[data-theme="dark"] .bg-\[\#121720\],
+[data-theme="dark"] .bg-\[\#212121\] {
+  background-color: #2d3340;
+}
+
+/* tinted backgrounds */
+[data-theme="dark"] .bg-\[\#eff7ff\],
+[data-theme="dark"] .bg-\[\#eff6ff\],
+[data-theme="dark"] .bg-\[\#f4f9ff\],
+[data-theme="dark"] .bg-\[\#edf5ff\],
+[data-theme="dark"] .bg-\[\#ddefff\] {
+  background-color: #13233b;
+}
+[data-theme="dark"] .bg-\[\#fff6f0\],
+[data-theme="dark"] .bg-\[\#fff8f4\],
+[data-theme="dark"] .bg-\[\#fdf3e0\],
+[data-theme="dark"] .bg-\[\#fff1e0\],
+[data-theme="dark"] .hover\:bg-\[\#fff4eb\]:hover {
+  background-color: #2a1d12;
+}
+[data-theme="dark"] .bg-\[\#ffe2e2\],
+[data-theme="dark"] .bg-\[\#fff1f1\],
+[data-theme="dark"] .bg-\[\#fff1f0\],
+[data-theme="dark"] .bg-\[\#ffebeb\],
+[data-theme="dark"] .bg-\[\#fdeceb\],
+[data-theme="dark"] .hover\:bg-\[\#ffe4e2\]:hover,
+[data-theme="dark"] .hover\:bg-\[\#ffe3e3\]:hover {
+  background-color: #2c1517;
+}
+[data-theme="dark"] .bg-\[\#dcfce7\],
+[data-theme="dark"] .bg-\[\#e6f9f0\] {
+  background-color: #10261b;
+}
+[data-theme="dark"] .bg-\[\#fef9c2\] {
+  background-color: #2a2610;
+}
+
+/* text */
+[data-theme="dark"] .text-\[\#212121\],
+[data-theme="dark"] .text-\[\#101828\],
+[data-theme="dark"] .text-black,
+[data-theme="dark"] .hover\:text-\[\#212121\]:hover {
+  color: #ececec;
+}
+[data-theme="dark"] .text-\[\#9f9f9f\],
+[data-theme="dark"] .text-\[\#6d6d6d\],
+[data-theme="dark"] .text-\[\#909dad\],
+[data-theme="dark"] .text-\[\#4a5565\],
+[data-theme="dark"] .text-\[\#6b7280\],
+[data-theme="dark"] .text-\[\#747474\] {
+  color: #9aa1ab;
+}
+[data-theme="dark"] .text-\[\#21212180\],
+[data-theme="dark"] .text-black\/50 {
+  color: rgb(255 255 255 / 0.5);
+}
+[data-theme="dark"] .placeholder\:text-\[\#21212180\]::placeholder {
+  color: rgb(255 255 255 / 0.4);
+}
+[data-theme="dark"] .text-\[\#0225b6\] {
+  color: #6ea8ff;
+}
+/* status text that was tuned for light tints */
+[data-theme="dark"] .text-\[\#894b00\] {
+  color: #f5c451;
+}
+[data-theme="dark"] .text-\[\#016630\] {
+  color: #4ade80;
+}
+[data-theme="dark"] .text-\[\#9f0712\] {
+  color: #f87171;
+}
+[data-theme="dark"] .text-\[\#b64a03\],
+[data-theme="dark"] .text-\[\#b45a00\] {
+  color: #ff9a4d;
+}
+
+/* borders */
+[data-theme="dark"] .border-\[\#f2f4f7\],
+[data-theme="dark"] .border-\[\#f4f4f4\],
+[data-theme="dark"] .border-\[\#e5e5e5\],
+[data-theme="dark"] .border-\[\#ececec\],
+[data-theme="dark"] .border-\[\#ebeef2\],
+[data-theme="dark"] .border-\[\#e0e0e0\],
+[data-theme="dark"] .border-\[\#f6f6f6\],
+[data-theme="dark"] .border-\[\#e7e7e7\],
+[data-theme="dark"] .border-\[\#e3e3e3\],
+[data-theme="dark"] .border-\[\#f1e9e9\],
+[data-theme="dark"] .divide-\[\#f2f4f7\] > :not(:last-child) {
+  border-color: #2a2e36;
+}
+[data-theme="dark"] .border-\[\#212121\] {
+  border-color: #4a4f58;
+}
+[data-theme="dark"] .border-\[\#b2d3ff\],
+[data-theme="dark"] .border-\[\#e6f1ff\],
+[data-theme="dark"] .border-\[\#d6e9ff\],
+[data-theme="dark"] .border-\[\#d1e9ff\] {
+  border-color: #1f3a5f;
+}
+[data-theme="dark"] .border-\[\#ffd0aa\],
+[data-theme="dark"] .border-\[\#f6a86b\] {
+  border-color: #6b3d16;
+}

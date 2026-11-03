@@ -13,7 +13,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* apply the saved theme before first paint so dark mode doesn't flash white */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{if(localStorage.getItem("quant_theme")==="dark")document.documentElement.setAttribute("data-theme","dark")}catch(e){}})()`,
+          }}
+        />
+      </head>
       <body className="antialiased bg-[#fbfbfb]">
         <ProfileProvider>
           {children}

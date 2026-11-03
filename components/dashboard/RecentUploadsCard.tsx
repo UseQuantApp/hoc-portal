@@ -6,8 +6,16 @@ import { Plus, ArrowRight, Calendar } from "lucide-react";
 import Link from "next/link";
 import { apiFetch } from "@/lib/api";
 import { getCurrentAcademicSession } from "@/lib/academic";
+import { statusStyles } from "@/components/dashboard/FullUploadsTable";
 
-const columns = ["Document Title", "Courses", "Date"];
+const columns = ["Document Title", "Courses", "Date", "Status", "Points"];
+
+const statusLabels: Record<string, string> = { pending: "In Review", approved: "Approved", rejected: "Rejected" };
+
+function pointsLabel(status: string, pointsAwarded: number | null) {
+  if (status === "pending") return "0 pts (In review)";
+  return `${pointsAwarded ?? 0} pts`;
+}
 
 // NEW: proper icon lookup instead of a binary doc/pdf check — handles docx/pptx too
 const fileIcons: Record<string, string> = {
@@ -42,6 +50,8 @@ type DocumentFile = {
   uploadedByType: string;
   uploadedBy: string;
   createdAt?: string; // NEW
+  status?: string;
+  pointsAwarded?: number | null;
 };
 
 type Upload = {
@@ -51,6 +61,8 @@ type Upload = {
   type: string;
   course: string;
   date: string;
+  status: string;
+  pointsAwarded: number | null;
 };
 
 export default function RecentUploadsCard() {
@@ -99,6 +111,8 @@ export default function RecentUploadsCard() {
               course: courseName,
               // CHANGED: uses the document's real upload date instead of always showing today
               date: doc.createdAt ? new Date(doc.createdAt).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
+              status: typeof doc.status === "string" ? doc.status.toLowerCase() : "pending",
+              pointsAwarded: doc.pointsAwarded == null ? null : Number(doc.pointsAwarded),
             };
           });
 
@@ -131,7 +145,7 @@ export default function RecentUploadsCard() {
       </div>
 
       <div className="bg-white border border-[#f2f4f7] rounded-2xl overflow-hidden overflow-x-auto">
-        <div className="flex items-center bg-[#fcfdfd] border-b border-[#f2f4f7] min-w-[500px] lg:min-w-0">
+        <div className="hidden lg:flex items-center bg-[#fcfdfd] border-b border-[#f2f4f7]">
           {columns.map((col) => (
             <p
               key={col}
@@ -167,27 +181,50 @@ export default function RecentUploadsCard() {
           </div>
         ) : (
           <div className="lg:min-w-0">
-            {uploads.map((upload, index) => (
-              <div key={`${upload.id}-${index}`} className="flex flex-col lg:flex-row lg:items-center border-b border-[#f2f4f7] last:border-b-0">
-                <div className="flex-1 flex items-center gap-3 lg:gap-4 px-4 lg:px-8 pt-4 lg:py-8">
-                  {/* CHANGED: uses the icon map so docx/pptx get their correct icons instead of falling through to PDF */}
-                  <Image
-                    src={fileIcons[upload.type] || fileIcons.pdf}
-                    alt=""
-                    width={28}
-                    height={28}
-                  />
-                  <div>
-                    <p className="text-sm lg:text-base text-[#212121]">{upload.title}</p>
-                    <p className="text-xs text-[#909dad]">{upload.size}</p>
+            {uploads.map((upload, index) => {
+              const style = statusStyles[upload.status] || statusStyles["—"];
+              const statusPill = (
+                <span className={`${style.bg} ${style.text} inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs`}>
+                  {style.icon} {statusLabels[upload.status] ?? upload.status}
+                </span>
+              );
+              // CHANGED: uses the icon map so docx/pptx get their correct icons instead of falling through to PDF
+              const fileIcon = <Image src={fileIcons[upload.type] || fileIcons.pdf} alt="" width={28} height={28} className="shrink-0 self-start size-7 object-contain" />;
+
+              return (
+                <div key={`${upload.id}-${index}`} className="border-b border-[#f2f4f7] last:border-b-0">
+                  {/* mobile: compact card, matching the /uploads page */}
+                  <div className="lg:hidden flex gap-3 px-4 py-4">
+                    {fileIcon}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-[#212121] truncate">{upload.title}</p>
+                      <p className="text-xs text-[#909dad]">{upload.course} · {upload.size}</p>
+                      <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-[#4a5565]">
+                        <span>{upload.date}</span>
+                        {statusPill}
+                        <span className="text-[#101828]">{pointsLabel(upload.status, upload.pointsAwarded)}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="hidden lg:flex items-center">
+                    <div className="flex-1 flex items-center gap-4 px-8 py-8">
+                      {fileIcon}
+                      <div>
+                        <p className="text-base text-[#212121]">{upload.title}</p>
+                        <p className="text-xs text-[#909dad]">{upload.size}</p>
+                      </div>
+                    </div>
+                    <p className="flex-1 text-base text-[#101828] px-6">{upload.course}</p>
+                    <div className="flex-1 flex items-center gap-1.5 px-6 text-sm text-[#4a5565]">
+                      <Calendar size={14} /> {upload.date}
+                    </div>
+                    <div className="flex-1 px-6">{statusPill}</div>
+                    <p className="flex-1 text-base text-[#101828] px-6">{pointsLabel(upload.status, upload.pointsAwarded)}</p>
                   </div>
                 </div>
-                <p className="flex-1 text-sm lg:text-base text-[#101828] px-4 lg:px-6 pb-2 lg:pb-0">{upload.course}</p>
-                <div className="flex-1 flex items-center gap-1.5 px-4 lg:px-6 pb-4 lg:pb-0 text-sm text-[#4a5565]">
-                  <Calendar size={14} /> {upload.date}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

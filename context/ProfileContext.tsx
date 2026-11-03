@@ -1,6 +1,7 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from "react";
+import { usePathname } from "next/navigation";
 import { apiFetch } from "@/lib/api";
 
 type Profile = {
@@ -21,7 +22,19 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const pathname = usePathname();
+  // token the current profile was loaded for — lets us notice login/logout/account switches
+  const loadedTokenRef = useRef<string | null | undefined>(undefined);
+
   const refreshProfile = useCallback(async () => {
+    const token = localStorage.getItem("quant_token");
+    loadedTokenRef.current = token;
+    if (!token) {
+      setFullName("");
+      setPhotoUrl(null);
+      setIsLoading(false);
+      return;
+    }
     try {
       const res = await apiFetch("/students/me");
       const student = res.data ?? res;
@@ -34,9 +47,14 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  // This provider lives in the root layout and survives client-side navigation, so the
+  // mount-time load happens on the sign-in page before any token exists. Re-sync on
+  // navigation whenever the stored token differs from the one we loaded for.
   useEffect(() => {
-    refreshProfile();
-  }, [refreshProfile]);
+    if (localStorage.getItem("quant_token") !== loadedTokenRef.current) {
+      refreshProfile();
+    }
+  }, [pathname, refreshProfile]);
 
   return (
     <ProfileContext.Provider value={{ fullName, photoUrl, isLoading, refreshProfile, setPhotoUrl }}>

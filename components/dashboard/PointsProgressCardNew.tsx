@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { Lock, AlertTriangle, ArrowRight } from "lucide-react";
+import { Lock, AlertTriangle, ArrowRight, Award } from "lucide-react";
 
 // NEW: matches the Badge schema from GET /badges/mine — replaces the old local Week type
 type Badge = {
@@ -14,38 +14,33 @@ type Badge = {
   earnedAt: string | null;
 };
 
-// NEW: matches the pointsData prop shape sent from app/dashboard/page.tsx
-type PointsSummary = { points: number; tokens: number; lifetimePointsEarned: number; uploadStreakDays: number };
 
 type PointsProgressCardProps = {
   totalUploaded?: number;
   pointsEarned?: number;
   badges?: Badge[]; // CHANGED: was weeks?: Week[]
-  pointsData?: PointsSummary; // NEW
   fullName?: string;
-  tokens?: number;
-  uploadStreakDays?: number;
 };
 
 export default function PointsProgressCard({
   totalUploaded = 0,
   pointsEarned = 0,
   badges = [], // CHANGED: was weeks = defaultWeeks
-  pointsData = { points: 0, tokens: 0, lifetimePointsEarned: 0, uploadStreakDays: 0 }, // NEW
   fullName = "",
-  tokens = 0,
-  uploadStreakDays = 0,
 }: PointsProgressCardProps) {
   const isEmpty = pointsEarned === 0;
   const firstName = fullName ? fullName.split(" ")[0] : "";
 
-  // NEW: sort ascending by points threshold so the row still renders in progression order,
-  // since the API doesn't guarantee /badges/mine comes back pre-sorted.
-  const sortedBadges = [...badges].sort((a, b) => a.points - b.points);
+  // badge.points is the reward a badge grants, not a threshold to reach, so it can't order
+  // a progression. Show earned badges first (oldest first), then locked ones in API order.
+  const earnedBadges = badges
+    .filter((b) => b.earned)
+    .sort((a, b) => new Date(a.earnedAt ?? 0).getTime() - new Date(b.earnedAt ?? 0).getTime());
+  const sortedBadges = [...earnedBadges, ...badges.filter((b) => !b.earned)];
 
-  // NEW: the first badge the student hasn't earned yet is "current" and gets the ring.
-  // Everything earned is achieved (green); everything else stays locked (grey).
-  const currentIndex = sortedBadges.findIndex((b) => !b.earned);
+  // The first locked badge is "up next" and gets the ring.
+  const currentIndex = earnedBadges.length < sortedBadges.length ? earnedBadges.length : -1;
+  const badgeProgress = badges.length ? Math.round((earnedBadges.length / badges.length) * 100) : 0;
 
   return (
     <div className="w-full font-sans">
@@ -69,7 +64,7 @@ export default function PointsProgressCard({
         </div>
       </div>
 
-      <div className="bg-white border border-[#f6f6f6] rounded-xl flex items-center gap-4 lg:gap-8 p-3 lg:p-4 h-auto lg:h-[180px] overflow-x-auto">
+      <div className="bg-white border border-[#f6f6f6] rounded-xl flex items-center gap-4 lg:gap-8 p-3 lg:p-4 h-auto lg:min-h-[180px] overflow-x-auto overflow-y-hidden">
         <div className="bg-[#eff7ff] border-2 border-[#e6f1ff] rounded-xl flex flex-col gap-2 lg:gap-3 items-center justify-center px-4 lg:px-6 py-2 lg:py-3 h-[110px] lg:h-[153px] w-[150px] lg:w-[220px] shrink-0">
           <p className="text-xs lg:text-base text-black">Points earned</p>
           <div className="flex items-center gap-1">
@@ -87,46 +82,48 @@ export default function PointsProgressCard({
           </button>
         </div>
 
-        <Stat label="Tokens" value={tokens.toLocaleString()} />
-        <Stat label="Upload streak" value={`${uploadStreakDays} days`} />
-
-      
-        <div className="flex items-center justify-between gap-3 lg:gap-6 border-l border-[#e5e5e5] pl-4 lg:pl-8 flex-1 min-w-0">
+        <div className="flex items-center justify-between gap-3 lg:gap-6 flex-1 min-w-0">
           {sortedBadges.length === 0 ? (
             <p className="text-xs lg:text-sm text-[#9f9f9f] px-2">Loading badges...</p>
           ) : (
             sortedBadges.map((badge, i) => {
               const achieved = badge.earned;
               const isCurrent = i === currentIndex;
-              const pointsAway = badge.points - pointsData.points;
-              const badgeLabel = badge.tier.charAt(0).toUpperCase();
+              const tier = badge.tier.charAt(0).toUpperCase() + badge.tier.slice(1);
+              const tooltip = `${badge.name} (${tier})${badge.description ? ` — ${badge.description}` : ""}`;
 
               const badgeIcon = (
                 <div
-                  className={`relative size-[26px] lg:size-[34px] rounded-md flex flex-col items-center justify-center border-2 border-white ${
-                    achieved || isCurrent ? "bg-[#008551]" : "bg-[#cbcbcb]"
+                  className={`size-[26px] lg:size-[34px] rounded-md flex items-center justify-center border-2 border-white shadow-sm ${
+                    achieved ? "bg-[#008551]" : "bg-[#cbcbcb]"
                   }`}
                 >
-                  <Image src="/images/badge-metal.svg" alt="" width={11} height={11} className="lg:w-[14px] lg:h-[14px]" />
-                  <span className="absolute bottom-1 lg:bottom-1.5 text-white text-[5px] lg:text-[6px] font-bold">
-                    {badgeLabel}
-                  </span>
+                  <Award className="size-[14px] lg:size-[18px] text-white" strokeWidth={2.25} />
                 </div>
               );
 
               if (isCurrent) {
                 return (
-                  <div key={badge.id} className="relative shrink-0 size-[90px] lg:size-[130px] flex flex-col items-center justify-center">
-                    <Image src="/images/progress-ring.svg" alt="" fill className="object-contain"/>
-                    <div className="absolute top-3 lg:top-5">{badgeIcon}</div>
-                    <p className="text-xs lg:text-base font-bold text-[#212121] mt-8 lg:mt-11">
-                      {badge.points.toLocaleString()}
-                    </p>
-                    <p className="text-[8px] lg:text-[10px] text-black">Points</p>
-                    <div className="flex items-center gap-1">
-                      <AlertTriangle size={9} className="text-[#ffcc14]" />
-                      <p className="text-[8px] lg:text-[10px] font-bold text-[#ffcc14]">
-                        {pointsAway.toLocaleString()} points Away
+                  <div key={badge.id} title={tooltip} className="shrink-0 flex flex-col items-center gap-1">
+                    <div className="relative size-[90px] lg:size-[130px] flex flex-col items-center justify-center">
+                      {/* ring fill = share of all badges earned so far */}
+                      <svg viewBox="0 0 100 100" className="absolute inset-0 size-full -rotate-90">
+                        <circle cx="50" cy="50" r="44" fill="none" stroke="#edeef2" strokeWidth="6" />
+                        <circle
+                          cx="50" cy="50" r="44" fill="none" stroke="#008551" strokeWidth="6" strokeLinecap="round"
+                          pathLength={100} strokeDasharray={`${badgeProgress} 100`}
+                        />
+                      </svg>
+                      <div className="absolute top-3 lg:top-5">{badgeIcon}</div>
+                      <p className="text-xs lg:text-base font-bold text-[#212121] mt-8 lg:mt-11">
+                        +{badge.points.toLocaleString()}
+                      </p>
+                      <p className="text-[8px] lg:text-[10px] text-black">Points</p>
+                    </div>
+                    <div className="flex items-center gap-1 max-w-[110px] lg:max-w-[140px]">
+                      <AlertTriangle size={9} className="text-[#ffcc14] shrink-0" />
+                      <p className="text-[8px] lg:text-[10px] font-bold text-[#ffcc14] truncate">
+                        Next: {badge.name}
                       </p>
                     </div>
                   </div>
@@ -134,10 +131,10 @@ export default function PointsProgressCard({
               }
 
               return (
-                <div key={badge.id} className="flex flex-col items-center gap-1.5 lg:gap-2 shrink-0">
+                <div key={badge.id} title={tooltip} className="flex flex-col items-center gap-1.5 lg:gap-2 shrink-0">
                   {badgeIcon}
                   <p className={`text-xs lg:text-base font-bold ${achieved ? "text-[#212121]" : "text-[#9f9f9f]"}`}>
-                    {badge.points.toLocaleString()}
+                    +{badge.points.toLocaleString()}
                   </p>
                   {achieved ? (
                     <p className="text-[8px] lg:text-[10px] text-[#9f9f9f]">Points</p>
@@ -154,15 +151,6 @@ export default function PointsProgressCard({
         </div>
         
       </div>
-    </div>
-  );
-}
-
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex flex-col items-center gap-1.5 lg:gap-2 shrink-0 px-1 lg:px-2">
-      <p className="text-xs lg:text-base font-bold text-[#212121]">{value}</p>
-      <p className="text-[8px] lg:text-[10px] text-[#9f9f9f]">{label}</p>
     </div>
   );
 }

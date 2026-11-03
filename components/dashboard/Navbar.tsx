@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { Bell, Menu, X } from "lucide-react";
+import { Bell, Menu, Moon, Sun, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
@@ -32,6 +32,30 @@ export default function Navbar({ searchQuery, onSearchChange }: NavbarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
+  // no React state: the attribute on <html> is the source of truth (set pre-paint in
+  // app/layout.tsx), and the Moon/Sun icons swap via the dark: variant
+  const toggleTheme = () => {
+    const root = document.documentElement;
+    const next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    if (next === "dark") root.setAttribute("data-theme", "dark");
+    else root.removeAttribute("data-theme");
+    try {
+      localStorage.setItem("quant_theme", next);
+    } catch {}
+  };
+
+  const themeButton = (
+    <button
+      type="button"
+      aria-label="Toggle dark mode"
+      onClick={toggleTheme}
+      className="flex size-10 rounded-lg bg-[#efefef] items-center justify-center"
+    >
+      <Moon size={16} className="dark:hidden" />
+      <Sun size={16} className="hidden dark:block" />
+    </button>
+  );
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -71,9 +95,10 @@ export default function Navbar({ searchQuery, onSearchChange }: NavbarProps) {
         </nav>
 
         <div className="flex items-center gap-3.5">
-          <button className="hidden lg:flex size-10 rounded-lg bg-[#efefef] border border-[#212121] items-center justify-center">
+          <button className="hidden lg:flex size-10 rounded-lg bg-[#efefef] items-center justify-center">
             <Bell size={16} />
           </button>
+          {themeButton}
           <button className="lg:hidden size-10 rounded-lg bg-[#f60] flex items-center justify-center">
             <Bell size={16} className="text-white" />
           </button>

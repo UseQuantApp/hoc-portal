@@ -40,7 +40,7 @@ export default function RecentWinsCard({ transactions = [] }: { transactions?: P
 
   return (
     <div className="border border-[#ececec] bg-[#fbfbfb] rounded-2xl flex flex-col gap-6 lg:gap-10 p-3 lg:p-4 w-full lg:w-[580px]">
-      <p className="text-lg lg:text-[28px] font-bold text-[#212121] text-center">Recent Wins</p>
+      <p className="text-lg lg:text-[28px] font-bold text-[#212121]">Recent Wins</p>
 
       {isEmpty ? (
         <div className="relative bg-white border border-[#f2f4f7] rounded-xl overflow-hidden">

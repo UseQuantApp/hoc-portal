@@ -4,12 +4,6 @@ import Image from "next/image";
 import type { Leader } from "@/components/dashboard/LeaderboardCard";
 import InitialsAvatar from "@/components/shared/InitialsAvatar";
 
-const medalIcon: Record<string, string> = {
-  "medal-1": "/images/medal-gold.svg",
-  "medal-2": "/images/medal-silver.svg",
-  "medal-3": "/images/medal-bronze.svg",
-};
-
 export default function FullLeaderboard({ leaders }: { leaders: Leader[] }) {
   return (
     <div className="border border-[#ececec] bg-[#fbfbfb] rounded-2xl flex flex-col gap-2 lg:gap-4 p-2 lg:p-4">
@@ -21,8 +15,8 @@ export default function FullLeaderboard({ leaders }: { leaders: Leader[] }) {
           }`}
         >
           <div className="flex items-center gap-2 lg:gap-6 min-w-0">
-            {typeof leader.rank === "string" ? (
-              <Image src={medalIcon[leader.rank]} alt="" width={20} height={20} className="lg:w-[34px] lg:h-[34px] shrink-0" />
+            {leader.medal ? (
+              <Image src={leader.medal} alt={`Rank ${leader.rank}`} width={20} height={20} className="lg:w-[34px] lg:h-[34px] shrink-0" />
             ) : (
               <p className="font-bold text-lg lg:text-2xl text-[#f60] shrink-0 w-6 lg:w-10">#{leader.rank}</p>
             )}
