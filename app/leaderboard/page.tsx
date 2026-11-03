@@ -25,7 +25,7 @@ export default function LeaderboardPage() {
       try {
         const response = await apiFetch("/leaderboard?limit=20");
         const leaderboard = response.data ?? response;
-        const mappedLeaders = (leaderboard.entries ?? []).map((entry: LeaderboardEntry) => ({
+        const mappedLeaders = [...(leaderboard.entries ?? [])].sort((a: LeaderboardEntry, b: LeaderboardEntry) => a.rank - b.rank).map((entry: LeaderboardEntry) => ({
           name: entry.fullName,
           tier: `#${entry.rank}`,
           materials: entry.materialsUploaded,

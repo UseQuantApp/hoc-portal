@@ -31,16 +31,14 @@ export default function PointsProgressCard({
   const isEmpty = pointsEarned === 0;
   const firstName = fullName ? fullName.split(" ")[0] : "";
 
-  // badge.points is the reward a badge grants, not a threshold to reach, so it can't order
-  // a progression. Show earned badges first (oldest first), then locked ones in API order.
-  const earnedBadges = badges
-    .filter((b) => b.earned)
-    .sort((a, b) => new Date(a.earnedAt ?? 0).getTime() - new Date(b.earnedAt ?? 0).getTime());
-  const sortedBadges = [...earnedBadges, ...badges.filter((b) => !b.earned)];
+  // Match the Figma track: badges in ascending points order, labelled T1, T2, ... by position.
+  // Earned state still comes from the API, so an earned badge can sit after a locked one.
+  const sortedBadges = [...badges].sort((a, b) => a.points - b.points);
 
-  // The first locked badge is "up next" and gets the ring.
-  const currentIndex = earnedBadges.length < sortedBadges.length ? earnedBadges.length : -1;
-  const badgeProgress = badges.length ? Math.round((earnedBadges.length / badges.length) * 100) : 0;
+  // The first locked badge in that order is "up next" and gets the ring.
+  const currentIndex = sortedBadges.findIndex((b) => !b.earned);
+  const earnedCount = badges.filter((b) => b.earned).length;
+  const badgeProgress = badges.length ? Math.round((earnedCount / badges.length) * 100) : 0;
 
   return (
     <div className="w-full font-sans">
@@ -90,15 +88,16 @@ export default function PointsProgressCard({
               const achieved = badge.earned;
               const isCurrent = i === currentIndex;
               const tier = badge.tier.charAt(0).toUpperCase() + badge.tier.slice(1);
-              const tooltip = `${badge.name} (${tier})${badge.description ? ` — ${badge.description}` : ""}`;
+              const tooltip = `T${i + 1} · ${badge.name} (${tier})${badge.description ? ` — ${badge.description}` : ""}`;
 
               const badgeIcon = (
                 <div
-                  className={`size-[26px] lg:size-[34px] rounded-md flex items-center justify-center border-2 border-white shadow-sm ${
+                  className={`size-[30px] lg:size-[38px] rounded-md flex flex-col items-center justify-center gap-px border-2 border-white shadow-sm ${
                     achieved ? "bg-[#008551]" : "bg-[#cbcbcb]"
                   }`}
                 >
-                  <Award className="size-[14px] lg:size-[18px] text-white" strokeWidth={2.25} />
+                  <Award className="size-[12px] lg:size-[16px] text-white" strokeWidth={2.25} />
+                  <span className="text-white text-[7px] lg:text-[8px] font-bold leading-none">T{i + 1}</span>
                 </div>
               );
 
@@ -116,7 +115,7 @@ export default function PointsProgressCard({
                       </svg>
                       <div className="absolute top-3 lg:top-5">{badgeIcon}</div>
                       <p className="text-xs lg:text-base font-bold text-[#212121] mt-8 lg:mt-11">
-                        +{badge.points.toLocaleString()}
+                        {badge.points.toLocaleString()}
                       </p>
                       <p className="text-[8px] lg:text-[10px] text-black">Points</p>
                     </div>
@@ -134,7 +133,7 @@ export default function PointsProgressCard({
                 <div key={badge.id} title={tooltip} className="flex flex-col items-center gap-1.5 lg:gap-2 shrink-0">
                   {badgeIcon}
                   <p className={`text-xs lg:text-base font-bold ${achieved ? "text-[#212121]" : "text-[#9f9f9f]"}`}>
-                    +{badge.points.toLocaleString()}
+                    {badge.points.toLocaleString()}
                   </p>
                   {achieved ? (
                     <p className="text-[8px] lg:text-[10px] text-[#9f9f9f]">Points</p>

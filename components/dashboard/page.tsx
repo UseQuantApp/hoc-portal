@@ -73,7 +73,7 @@ export default function DashboardPage() {
 
         const leaderboard = leaderboardResponse.data ?? leaderboardResponse;
         setLeaderboardMe(leaderboard.me);
-        setLeaders((leaderboard.entries ?? []).map((entry: { rank: number; fullName: string; points: number; materialsUploaded: number }) => {
+        setLeaders([...(leaderboard.entries ?? [])].sort((a: { rank: number }, b: { rank: number }) => a.rank - b.rank).map((entry: { rank: number; fullName: string; points: number; materialsUploaded: number }) => {
           const isYou = leaderboard.me?.rank === entry.rank;
           return {
             name: entry.fullName,
