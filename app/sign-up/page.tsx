@@ -20,7 +20,6 @@ export default function SignUpPage() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
 
-  const [matricNumber, setMatricNumber] = useState("");
   const [institution, setInstitution] = useState("LASU");
   const [faculty, setFaculty] = useState("");
   const [department, setDepartment] = useState("");
@@ -56,7 +55,6 @@ export default function SignUpPage() {
           phone: normalizeNigerianPhone(whatsapp),
           email,
           password,
-          matricNumber,
           university: institution,
           department,
           level,
@@ -156,21 +154,6 @@ export default function SignUpPage() {
           {step === 2 && (
             <form className="flex flex-col gap-6">
               <div className="flex flex-col gap-4">
-                <div className="flex flex-col gap-3">
-                  <label htmlFor="matric" className="text-sm lg:text-base font-bold text-[#212121]">
-                    Matric Number
-                  </label>
-                  <div className="bg-white border-[1.5px] border-[#f4f4f4] rounded-xl p-4">
-                    <input
-                      id="matric"
-                      value={matricNumber}
-                      onChange={(e) => setMatricNumber(e.target.value)}
-                      placeholder="e.g 220123456"
-                      className="w-full text-base text-[#212121] placeholder:text-[#21212180] outline-none bg-transparent"
-                    />
-                  </div>
-                </div>
-
                 <SelectField label="Institution" value={institution} onChange={setInstitution} options={institutions} />
                 <SelectField label="Faculty" value={faculty} onChange={setFaculty} options={faculties} placeholder="select faculty" />
                 <SelectField label="Department" value={department} onChange={setDepartment} options={departments} placeholder="select Department" />
@@ -180,7 +163,7 @@ export default function SignUpPage() {
               <button
                 type="button"
                 onClick={() => setStep(3)}
-                disabled={!matricNumber || !faculty || !department}
+                disabled={!faculty || !department}
                 className="w-full bg-[#f60] disabled:opacity-50 text-white text-base lg:text-lg font-bold py-3 rounded-xl hover:bg-[#e55600] transition-colors"
               >
                 Next
