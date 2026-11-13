@@ -99,8 +99,8 @@ export default function DashboardPage() {
           fullName={fullName}
           badges={badges}
         />
-        <RecentUploadsCard />
         <ReferralCard />
+        <RecentUploadsCard />
         <div className="flex flex-col lg:flex-row gap-6">
           <LeaderboardCard leaders={leaders} me={leaderboardMe} />
           <RecentWinsCard transactions={history} />
