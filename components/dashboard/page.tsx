@@ -6,6 +6,7 @@ import { getCurrentAcademicSession } from "@/lib/academic";
 import Navbar from "@/components/dashboard/Navbar";
 import PointsProgressCard from "@/components/dashboard/PointsProgressCardNew";
 import RecentUploadsCard from "@/components/dashboard/RecentUploadsCard";
+import ReferralCard from "@/components/dashboard/ReferralCard";
 import LeaderboardCard from "@/components/dashboard/LeaderboardCard";
 import RecentWinsCard, { type PointsTransaction } from "@/components/dashboard/RecentWinsCard";
 import { toLeaders, type LeaderboardEntry, type LeaderboardMe } from "@/lib/leaderboard";
@@ -99,6 +100,7 @@ export default function DashboardPage() {
           badges={badges}
         />
         <RecentUploadsCard />
+        <ReferralCard />
         <div className="flex flex-col lg:flex-row gap-6">
           <LeaderboardCard leaders={leaders} me={leaderboardMe} />
           <RecentWinsCard transactions={history} />
