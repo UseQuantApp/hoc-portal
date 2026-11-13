@@ -15,6 +15,8 @@ type Referral = {
 type ReferralSummary = {
   code: string;
   pointsPerReferral: number;
+  totalReferrals: number;
+  completedReferrals: number;
   pointsEarned: number;
   referrals: Referral[];
 };
@@ -64,6 +66,11 @@ export default function ReferralCard() {
   };
 
   const referrals = summary?.referrals ?? [];
+  const stats = [
+    { label: "Total referrals", value: summary?.totalReferrals ?? 0 },
+    { label: "Verified", value: summary?.completedReferrals ?? 0 },
+    { label: "Points earned", value: summary?.pointsEarned ?? 0 },
+  ];
 
   return (
     <div className="border border-[#ececec] bg-[#fbfbfb] rounded-2xl flex flex-col gap-6 lg:gap-8 p-3 lg:p-4 w-full">
@@ -104,9 +111,13 @@ export default function ReferralCard() {
               </button>
             </div>
 
-            <div className="bg-white border border-[#ececec] rounded-xl flex flex-col justify-center gap-1 p-3 lg:p-4 flex-1">
-              <p className="text-xl lg:text-2xl font-bold text-[#212121]">{summary?.pointsEarned ?? 0}</p>
-              <p className="text-xs lg:text-sm text-[#6d6d6d]">Points earned</p>
+            <div className="grid grid-cols-3 gap-3 lg:gap-4 flex-1">
+              {stats.map((stat) => (
+                <div key={stat.label} className="bg-white border border-[#ececec] rounded-xl flex flex-col gap-1 p-3 lg:p-4">
+                  <p className="text-xl lg:text-2xl font-bold text-[#212121]">{stat.value}</p>
+                  <p className="text-xs lg:text-sm text-[#6d6d6d]">{stat.label}</p>
+                </div>
+              ))}
             </div>
           </div>
 
