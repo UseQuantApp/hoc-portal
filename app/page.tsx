@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
 import { Eye, EyeOff } from "lucide-react";
 import { apiFetch } from "@/lib/api";
+import { isAuthorizationPendingError } from "@/lib/auth";
 
 export default function SignInPage() {
   const router = useRouter();
@@ -27,8 +28,14 @@ export default function SignInPage() {
         body: JSON.stringify({ email, password }),
       });
       localStorage.setItem("quant_token", res.data.token);
-      router.push("/dashboard");
+      // a student who isn't an ambassador yet gets a limited session: it can only
+      // read their own profile, so they wait on the authorization screen
+      router.push(res.data.student?.isAmbassador === false ? "/pending-authorization" : "/dashboard");
     } catch (err) {
+      if (isAuthorizationPendingError(err)) {
+        router.push("/pending-authorization");
+        return;
+      }
       const message = err instanceof Error ? err.message : "Login failed.";
       const requiresVerification = /verify|verification|verified/i.test(message);
       setIsVerificationRequired(requiresVerification);

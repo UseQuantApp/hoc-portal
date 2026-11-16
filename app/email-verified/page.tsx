@@ -18,15 +18,17 @@ export default function EmailVerifiedPage() {
         <div className="flex flex-col items-center gap-3 text-center">
           <h1 className="text-lg lg:text-xl font-bold text-[#212121]">Email verified!</h1>
           <p className="text-sm lg:text-base text-[#212121]">
-            Your email has been successfully verified. Your Quant account is ready.
+            Your email has been successfully verified. The portal opens once your account is
+            authorized as a Quant ambassador.
           </p>
         </div>
 
+        {/* signs in if already authorized, otherwise explains the authorization step */}
         <Link
-          href="/dashboard"
+          href="/pending-authorization"
           className="w-full bg-[#f60] text-white text-base lg:text-lg font-bold py-3 rounded-xl hover:bg-[#e55600] transition-colors text-center block"
         >
-          Continue to Dashboard
+          Continue
         </Link>
       </div>
     </main>
