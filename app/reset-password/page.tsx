@@ -153,7 +153,7 @@ export default function ResetPasswordPage() {
             {successMessage ? (
               <button
                 type="button"
-                onClick={() => router.push("/")}
+                onClick={() => router.push("/sign-in")}
                 className="w-full bg-[#f60] text-white text-base lg:text-lg font-bold py-3 rounded-xl hover:bg-[#e55600] transition-colors text-center"
               >
                 Continue to Login

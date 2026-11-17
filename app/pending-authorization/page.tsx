@@ -58,7 +58,7 @@ export default function PendingAuthorizationPage() {
 
   const goToSignIn = () => {
     if (localStorage.getItem("quant_token")) logoutStudent(router.push);
-    else router.push("/");
+    else router.push("/sign-in");
   };
 
   return (

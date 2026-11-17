@@ -27,7 +27,8 @@ Use PowerShell-friendly commands on Windows. Do not commit `.next` output or `ts
 
 ```text
 app/
-	page.tsx                         Sign in
+	page.tsx                         Public landing page (components/landing/LandingPage.tsx)
+	sign-in/page.tsx                 Sign in
 	sign-up/page.tsx                 Multi-step registration
 	verify-email/page.tsx            Email verification instructions
 	verify-otp/page.tsx              Six-digit email OTP verification
@@ -99,7 +100,7 @@ When adding a fetch, unwrap responses consistently with the existing pattern: `r
 
 - Sign in stores `res.data.token` as `localStorage` key `quant_token`, then routes to `/dashboard`.
 - Sign up stores the email in `sessionStorage` key `quant_signup_email`, then routes to email verification.
-- Logout must attempt `POST /auth/logout`, but must always remove `quant_token` and redirect to `/` in a `finally` block, even if the API/network fails.
+- Logout must attempt `POST /auth/logout`, but must always remove `quant_token` and redirect to `/sign-in` in a `finally` block, even if the API/network fails.
 - Password reset errors from `apiFetch` should be displayed as returned; do not replace invalid/expired-code messages with guesses.
 - Auth pages are client components when they need state, browser storage, router navigation, or API calls.
 

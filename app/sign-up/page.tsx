@@ -144,7 +144,7 @@ export default function SignUpPage() {
 
               <p className="text-sm lg:text-base text-center text-[#21212180]">
                 Already have an account?{" "}
-                <Link href="/" className="font-bold text-[#006dff]">
+                <Link href="/sign-in" className="font-bold text-[#006dff]">
                   Login
                 </Link>
               </p>
@@ -171,7 +171,7 @@ export default function SignUpPage() {
 
               <p className="text-sm lg:text-base text-center text-[#21212180]">
                 Already have an account?{" "}
-                <Link href="/" className="font-bold text-[#006dff]">
+                <Link href="/sign-in" className="font-bold text-[#006dff]">
                   Login
                 </Link>
               </p>
@@ -252,7 +252,7 @@ export default function SignUpPage() {
 
               <p className="text-sm lg:text-base text-center text-[#21212180]">
                 Already have an account?{" "}
-                <Link href="/" className="font-bold text-[#006dff]">
+                <Link href="/sign-in" className="font-bold text-[#006dff]">
                   Login
                 </Link>
               </p>
