@@ -9,7 +9,7 @@ import { normalizeNigerianPhone } from "@/lib/phone";
 
 const institutions = ["LASU"];
 const faculties = ["Faculty of Engineering"];
-const departments = ["Mechanical Engineering", "Electronic and Computer Engineering", "Civil Engineering", "Chemical Engineering", "Industrial Engineering"];
+const departments = ["Mechanical Engineering", "Electronic and Computer Engineering", "Civil Engineering", "Chemical Engineering", "Industrial Engineering", "Aerospace Engineering"];
 const levels = ["100", "200", "300", "400", "500"];
 
 const TOTAL_STEPS = 3;
